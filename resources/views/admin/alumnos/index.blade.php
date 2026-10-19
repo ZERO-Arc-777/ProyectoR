@@ -6,7 +6,7 @@
 </head>
 <body>
 
-    <h1>Gestión de Alumnos</h1>
+    <h1>Gestión de Alumsnssssssssssssssssos</h1>
     <a href="{{ route('admin.dashboard') }}">Volver al Dashboard</a>
     <hr>
 
