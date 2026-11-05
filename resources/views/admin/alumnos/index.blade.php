@@ -31,7 +31,7 @@
             @forelse ($alumnos as $alumno)
                 <tr>
                     <td>{{ $alumno->matricula }}</td>
-                    <td>{{ $alumno->apellido_paterno }} {{ $alumno->apellido_materno }} {{ $alumno->nombre }}</td>
+                    <td>{{ $alumno->apellido_paterno }} {{ $alumno->apellido_materno }} {{ $alumno->nombres }}</td>
                     <td>{{ $alumno->curp }}</td>
                     <td align="center">{{ $alumno->semestre }}° "{{ $alumno->grupo }}"</td>
                 </tr>

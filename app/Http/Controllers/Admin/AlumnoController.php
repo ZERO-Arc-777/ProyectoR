@@ -28,7 +28,7 @@ class AlumnoController
         $request->validate([
             'id_usuario'       => 'required|exists:usuarios,id_usuario|unique:alumnos,id_usuario',
             'matricula'        => 'required|string|unique:alumnos,matricula',
-            'nombre'           => 'required|string|max:100',
+            'nombres'           => 'required|string|max:100',
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',
             'curp'             => 'required|string|size:18|unique:alumnos,curp',

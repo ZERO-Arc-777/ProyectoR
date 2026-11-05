@@ -16,6 +16,7 @@
 
     <ul>
         <li><a href="{{ route('alumno.materias') }}"> Materias</a></li>
+        <li><a href="{{ route('alumno.solicitudes') }}"> Trámites y Pagos</a></li>
     </ul>
 
     <hr>

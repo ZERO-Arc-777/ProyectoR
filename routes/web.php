@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\BajaController;
 use App\Http\Controllers\Admin\EgresadoController;
 
 use App\Http\Controllers\Alumno\MateriaAController;
+use App\Http\Controllers\Alumno\SolicitudController as AlumnoSolicitudController;
 
 Route::get('/', [AuthController::class, 'mostrarRoles'])->name('roles');
 Route::get('/login', function () {
@@ -62,7 +63,11 @@ Route::prefix('alumno')->group(function () {
     })->name('alumno.dashboard');
 
     Route::get('/materias', [MateriaAController::class, 'index'])->name('alumno.materias');
+    Route::get('/solicitudes', [AlumnoSolicitudController::class, 'index'])->name('alumno.solicitudes');
+    Route::get('/solicitudes/nueva', [AlumnoSolicitudController::class, 'create'])->name('alumno.solicitudes.create');
+    Route::post('/solicitudes', [AlumnoSolicitudController::class, 'store'])->name('alumno.solicitudes.store');
 });
+
 Route::prefix('docente')->group(function () {
     Route::get('/', function () {
         return view('docente.dashboard');

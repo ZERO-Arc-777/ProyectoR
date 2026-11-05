@@ -45,7 +45,7 @@
 
         <p>
             <label>Nombre(s):</label><br>
-            <input type="text" name="nombre" required>
+            <input type="text" name="nombres" required>
         </p>
 
         <p>
