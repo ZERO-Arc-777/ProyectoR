@@ -63,7 +63,7 @@ Route::prefix('alumno')->group(function () {
 
     Route::get('/materias', [MateriaAController::class, 'index'])->name('alumno.materias');
 });
-Route::prefix('docente')->group(function () {
+Route::prefix('docente')->middleware('docente')->group(function () {
     Route::get('/', function () {
         return view('docente.dashboard');
     })->name('docente.dashboard');
