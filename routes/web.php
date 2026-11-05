@@ -68,7 +68,7 @@ Route::prefix('alumno')->group(function () {
     Route::post('/solicitudes', [AlumnoSolicitudController::class, 'store'])->name('alumno.solicitudes.store');
 });
 
-Route::prefix('docente')->group(function () {
+Route::prefix('docente')->middleware('docente')->group(function () {
     Route::get('/', function () {
         return view('docente.dashboard');
     })->name('docente.dashboard');
