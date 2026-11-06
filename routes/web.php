@@ -50,7 +50,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/materias', [MateriaController::class, 'index'])->name('admin.materias');
     Route::get('/periodos', [PeriodoController::class, 'index'])->name('admin.periodo');
     Route::get('/historial', [HistorialController::class, 'index'])->name('admin.historial');
+
     Route::get('/pagos', [PagoController::class, 'index'])->name('admin.pagos');
+    Route::put('/pagos/{id}/estado', [PagoController::class, 'updateEstado'])->name('admin.pagos.estado');
+
     Route::get('/constancias', [ConstanciaController::class, 'index'])->name('admin.constancias');
     Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('admin.expedientes');
     Route::get('/bajas', [BajaController::class, 'index'])->name('admin.bajas');
