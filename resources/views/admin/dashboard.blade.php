@@ -27,7 +27,9 @@
         <li><a href="{{ route('admin.historial') }}"> Historial Académico</a></li>
         <li><a href="{{ route('admin.pagos') }}"> Pagos</a></li>
         <li><a href="{{ route('admin.constancias') }}"> Constancias</a></li>
-        <li><a href="{{ route('admin.expedientes') }}"> Expedientes</a></li>
+        <li><a href="{{ route('admin.revision.inscripciones') }}"> Revisión de Inscripciones</a></li>
+        <li><a href="{{ route('admin.revision.reinscripciones') }}"> Revisión de Reinscripciones</a></li>
+        <li><a href="{{ route('admin.revision.egresos') }}"> Revisión de Egresos</a></li>
         <li><a href="{{ route('admin.bajas') }}"> Bajas</a></li>
         <li><a href="{{ route('admin.egresados') }}"> Egresados</a></li>
     </ul>

@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ExpedienteController;
 use App\Http\Controllers\Admin\BajaController;
 use App\Http\Controllers\Admin\EgresadoController;
 
+use App\Http\Controllers\Alumno\DocumentoController;
 use App\Http\Controllers\Alumno\MateriaAController;
 use App\Http\Controllers\Alumno\SolicitudController as AlumnoSolicitudController;
 
@@ -55,7 +56,14 @@ Route::prefix('admin')->group(function () {
     Route::put('/pagos/{id}/estado', [PagoController::class, 'updateEstado'])->name('admin.pagos.estado');
 
     Route::get('/constancias', [ConstanciaController::class, 'index'])->name('admin.constancias');
-    Route::get('/expedientes', [ExpedienteController::class, 'index'])->name('admin.expedientes');
+
+    Route::get('/revision-inscripciones', [ExpedienteController::class, 'inscripciones'])->name('admin.revision.inscripciones');
+    Route::get('/revision-reinscripciones', [ExpedienteController::class, 'reinscripciones'])->name('admin.revision.reinscripciones');
+    Route::get('/revision-egresos', [ExpedienteController::class, 'egresos'])->name('admin.revision.egresos');
+    Route::put('/documento/{id}/estado', [ExpedienteController::class, 'updateEstado'])->name('admin.documentos.estado');
+    
+    Route::put('/documento/{id}/estado', [Admin\RevisionDocumentoController::class, 'updateEstado'])->name('admin.documentos.estado');
+
     Route::get('/bajas', [BajaController::class, 'index'])->name('admin.bajas');
     Route::get('/egresados', [EgresadoController::class, 'index'])->name('admin.egresados');
 });
@@ -69,6 +77,9 @@ Route::prefix('alumno')->group(function () {
     Route::get('/solicitudes', [AlumnoSolicitudController::class, 'index'])->name('alumno.solicitudes');
     Route::get('/solicitudes/nueva', [AlumnoSolicitudController::class, 'create'])->name('alumno.solicitudes.create');
     Route::post('/solicitudes', [AlumnoSolicitudController::class, 'store'])->name('alumno.solicitudes.store');
+
+    Route::get('/mi-expediente', [DocumentoController::class, 'index'])->name('alumno.documentos');
+    Route::post('/mi-expediente/subir', [DocumentoController::class, 'store'])->name('alumno.documentos.store');
 });
 
 Route::prefix('docente')->middleware('docente')->group(function () {

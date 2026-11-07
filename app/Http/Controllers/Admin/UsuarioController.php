@@ -24,7 +24,7 @@ class UsuarioController
     {
         $request->validate([
             'nombre'     => 'required|string|max:255',
-            'correo'     => 'required|email|unique:usuarios,correo', // Verifica que el correo no se repita
+            'correo'     => 'required|email|unique:usuarios,correo',
             'contrasena' => 'required|min:6',
             'id_rol'     => 'required|exists:roles,id_rol'
         ]);
