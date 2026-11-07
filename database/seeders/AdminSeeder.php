@@ -35,7 +35,7 @@ class AdminSeeder extends Seeder
                 'id_rol'     => $rolAdmin->id_rol,
                 'nombre'     => 'Administrador General',
                 'contrasena' => Hash::make('Admin123'),
-                'estado'     => 1
+                'estado' => 'ACTIVO'
             ]
         );
     }
