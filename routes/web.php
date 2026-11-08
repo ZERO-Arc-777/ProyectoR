@@ -5,17 +5,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\AlumnoController;
 use App\Http\Controllers\Admin\DocenteController;
-use App\Http\Controllers\Admin\AspiranteController;
-use App\Http\Controllers\Admin\InscripcionController;
-use App\Http\Controllers\Admin\ReinscripcionController;
 use App\Http\Controllers\Admin\MateriaController;
-use App\Http\Controllers\Admin\PeriodoController;
-use App\Http\Controllers\Admin\HistorialController;
 use App\Http\Controllers\Admin\PagoController;
-use App\Http\Controllers\Admin\ConstanciaController;
 use App\Http\Controllers\Admin\ExpedienteController;
-use App\Http\Controllers\Admin\BajaController;
-use App\Http\Controllers\Admin\EgresadoController;
 
 use App\Http\Controllers\Alumno\DocumentoController;
 use App\Http\Controllers\Alumno\MateriaAController;
@@ -28,7 +20,7 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'iniciarSesion'])->name('login.post');
 Route::get('/logout', [AuthController::class, 'cerrarSesion'])->name('logout');
 
-Route::prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:1'])->prefix('admin')->group(function () {
     Route::get('/', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
@@ -45,30 +37,18 @@ Route::prefix('admin')->group(function () {
     Route::get('/docentes/crear', [DocenteController::class, 'create'])->name('admin.docentes.create');
     Route::post('/docentes', [DocenteController::class, 'store'])->name('admin.docentes.store');
 
-    Route::get('/aspirantes', [AspiranteController::class, 'index'])->name('admin.aspirantes');
-    Route::get('/inscripciones', [InscripcionController::class, 'index'])->name('admin.inscripciones');
-    Route::get('/reinscripciones', [ReinscripcionController::class, 'index'])->name('admin.reinscripciones');
     Route::get('/materias', [MateriaController::class, 'index'])->name('admin.materias');
-    Route::get('/periodos', [PeriodoController::class, 'index'])->name('admin.periodo');
-    Route::get('/historial', [HistorialController::class, 'index'])->name('admin.historial');
 
     Route::get('/pagos', [PagoController::class, 'index'])->name('admin.pagos');
     Route::put('/pagos/{id}/estado', [PagoController::class, 'updateEstado'])->name('admin.pagos.estado');
-
-    Route::get('/constancias', [ConstanciaController::class, 'index'])->name('admin.constancias');
 
     Route::get('/revision-inscripciones', [ExpedienteController::class, 'inscripciones'])->name('admin.revision.inscripciones');
     Route::get('/revision-reinscripciones', [ExpedienteController::class, 'reinscripciones'])->name('admin.revision.reinscripciones');
     Route::get('/revision-egresos', [ExpedienteController::class, 'egresos'])->name('admin.revision.egresos');
     Route::put('/documento/{id}/estado', [ExpedienteController::class, 'updateEstado'])->name('admin.documentos.estado');
-    
-    Route::put('/documento/{id}/estado', [Admin\RevisionDocumentoController::class, 'updateEstado'])->name('admin.documentos.estado');
-
-    Route::get('/bajas', [BajaController::class, 'index'])->name('admin.bajas');
-    Route::get('/egresados', [EgresadoController::class, 'index'])->name('admin.egresados');
 });
 
-Route::prefix('alumno')->group(function () {
+Route::middleware(['auth', 'role:3'])->prefix('alumno')->group(function () {
     Route::get('/', function () {
         return view('alumno.dashboard');
     })->name('alumno.dashboard');
@@ -82,7 +62,7 @@ Route::prefix('alumno')->group(function () {
     Route::post('/mi-expediente/subir', [DocumentoController::class, 'store'])->name('alumno.documentos.store');
 });
 
-Route::prefix('docente')->middleware('docente')->group(function () {
+Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
     Route::get('/', function () {
         return view('docente.dashboard');
     })->name('docente.dashboard');

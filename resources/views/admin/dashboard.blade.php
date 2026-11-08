@@ -19,19 +19,11 @@
         <li><a href="{{ route('admin.usuarios') }}"> Usuarios</a></li>
         <li><a href="{{ route('admin.alumnos') }}"> Alumnos</a></li>
         <li><a href="{{ route('admin.docentes') }}"> Docentes</a></li>
-        <li><a href="{{ route('admin.aspirantes') }}"> Aspirantes</a></li>
-        <li><a href="{{ route('admin.inscripciones') }}"> Inscripciones</a></li>
-        <li><a href="{{ route('admin.reinscripciones') }}"> Reinscripciones</a></li>
         <li><a href="{{ route('admin.materias') }}"> Materias</a></li>
-        <li><a href="{{ route('admin.periodo') }}"> Periodos</a></li>
-        <li><a href="{{ route('admin.historial') }}"> Historial Académico</a></li>
-        <li><a href="{{ route('admin.pagos') }}"> Pagos</a></li>
-        <li><a href="{{ route('admin.constancias') }}"> Constancias</a></li>
+        <li><a href="{{ route('admin.pagos') }}"> Solicitudes</a></li>
         <li><a href="{{ route('admin.revision.inscripciones') }}"> Revisión de Inscripciones</a></li>
         <li><a href="{{ route('admin.revision.reinscripciones') }}"> Revisión de Reinscripciones</a></li>
         <li><a href="{{ route('admin.revision.egresos') }}"> Revisión de Egresos</a></li>
-        <li><a href="{{ route('admin.bajas') }}"> Bajas</a></li>
-        <li><a href="{{ route('admin.egresados') }}"> Egresados</a></li>
     </ul>
 
     <hr>

@@ -6,7 +6,7 @@
 </head>
 <body>
 
-    <h1>Seguimiento de Pagos y Trámites</h1>
+    <h1>Seguimiento de Pagos y Solicitudes</h1>
     <a href="{{ route('admin.dashboard') }}">Volver al Dashboard</a>
     <hr>
 
