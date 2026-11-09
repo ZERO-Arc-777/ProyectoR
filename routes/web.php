@@ -46,7 +46,7 @@ Route::middleware(['auth', 'role:1'])->prefix('admin')->group(function () {
     Route::get('/materias', [MateriaController::class, 'index'])->name('admin.materias');
 
     Route::get('/pagos', [PagoController::class, 'index'])->name('admin.pagos');
-    Route::put('/pagos/{id}/estado', [PagoController::class, 'updateEstado'])->name('admin.pagos.estado');
+    Route::put('/pagos/{id_solicitud}/estado', [PagoController::class, 'updateEstado'])->name('admin.pagos.updateEstado');
 
     Route::get('/revision-inscripciones', [ExpedienteController::class, 'inscripciones'])->name('admin.revision.inscripciones');
     Route::get('/revision-reinscripciones', [ExpedienteController::class, 'reinscripciones'])->name('admin.revision.reinscripciones');
