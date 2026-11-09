@@ -20,12 +20,13 @@
 <style>
     .perfil-panel {
         min-height: 100vh;
-        color: #f5f3ff;
+        background-color: #f4f6f9; 
+        color: #212529; 
     }
 
     .perfil-sidebar {
-        background: #171323;
-        border-right: 1px solid rgba(255,255,255,.09);
+        background: #212529; 
+        border-right: 1px solid #343a40;
     }
 
     .perfil-nav {
@@ -34,50 +35,52 @@
         gap: 12px;
         padding: 13px 16px;
         border-radius: 12px;
-        color: #ccc6df;
+        color: #adb5bd;
         text-decoration: none;
         transition: background .2s, color .2s;
     }
 
     .perfil-nav:hover {
-        background: rgba(151,91,255,.13);
+        background: rgba(255, 255, 255, .1);
         color: #ffffff;
     }
 
     .perfil-nav.active {
-        background: #6934c5;
+        background: #fd7e14; 
         color: #ffffff;
         font-weight: 600;
     }
 
     .perfil-muted {
-        color: #b9b2c9;
+        color: #6c757d; 
     }
 
     .perfil-heading {
-        background: linear-gradient(110deg, #44217c, #712fc3);
-        border: 1px solid rgba(255,255,255,.1);
+        background: #212529;
+        border: 1px solid #343a40;
         border-radius: 20px;
         padding: 30px;
+        color: #ffffff;
     }
 
     .perfil-avatar {
         width: 82px;
         height: 82px;
         border-radius: 22px;
-        background: rgba(255,255,255,.15);
+        background: rgba(253, 126, 20, 0.15);
+        color: #fd7e14; 
         display: grid;
         place-items: center;
         font-size: 2.5rem;
-        color: #ffffff;
     }
 
     .perfil-card {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #d1d5d6; 
+        border: 1px solid #c0c4c5;
         border-radius: 20px;
         padding: 30px;
         height: 100%;
+        color: #212529;
     }
 
     .perfil-card-title {
@@ -87,22 +90,23 @@
         font-size: 1.25rem;
         font-weight: 700;
         margin-bottom: 25px;
+        color: #212529;
     }
 
     .perfil-card-icon {
         width: 46px;
         height: 46px;
         border-radius: 13px;
-        background: rgba(157,92,255,.16);
-        color: #c49bff;
+        background: #212529;
+        color: #fd7e14;
         display: grid;
         place-items: center;
         font-size: 1.3rem;
     }
 
     .perfil-field {
-        background: rgba(255,255,255,.035);
-        border: 1px solid rgba(255,255,255,.08);
+        background: #ffffff; 
+        border: 1px solid #c0c4c5;
         border-radius: 12px;
         padding: 15px 18px;
         height: 100%;
@@ -110,14 +114,14 @@
 
     .perfil-label {
         display: block;
-        color: #b9b2c9;
+        color: #6c757d; 
         font-size: .85rem;
         margin-bottom: 8px;
     }
 
     .perfil-value {
         display: block;
-        color: #ffffff;
+        color: #212529; 
         font-size: 1rem;
         font-weight: 600;
         overflow-wrap: anywhere;
@@ -127,8 +131,8 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: rgba(157,92,255,.18);
-        color: #dcc6ff;
+        background: rgba(253, 126, 20, 0.15); 
+        color: #d95c00; 
         padding: 8px 15px;
         border-radius: 30px;
         font-size: .85rem;
@@ -136,20 +140,16 @@
     }
 
     .perfil-info {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #d1d5d6;
+        border: 1px solid #c0c4c5;
         border-radius: 18px;
         padding: 25px;
+        color: #212529;
     }
 
     @media (max-width: 767.98px) {
-        .perfil-heading {
-            padding: 24px;
-        }
-
-        .perfil-card {
-            padding: 22px;
-        }
+        .perfil-heading { padding: 24px; }
+        .perfil-card { padding: 22px; }
     }
 </style>
 

@@ -15,13 +15,13 @@
 <style>
     .materias-panel {
         min-height: 100vh;
-        color: #f5f3ff;
+        background-color: #f4f6f9;
+        color: #212529; 
     }
 
-    /* MENÚ LATERAL */
     .materias-sidebar {
-        background: #171323;
-        border-right: 1px solid rgba(255,255,255,.09);
+        background: #212529;
+        border-right: 1px solid #343a40;
     }
 
     .materias-nav {
@@ -30,39 +30,40 @@
         gap: 12px;
         padding: 13px 16px;
         border-radius: 12px;
-        color: #ccc6df;
+        color: #adb5bd;
         text-decoration: none;
         transition: .2s;
     }
 
     .materias-nav:hover {
-        background: rgba(151,91,255,.13);
-        color: white;
+        background: rgba(255, 255, 255, .1);
+        color: #ffffff;
     }
 
     .materias-nav.active {
-        background: #6934c5;
-        color: white;
+        background: #fd7e14; 
+        color: #ffffff;
         font-weight: 600;
     }
 
     .materias-muted {
-        color: #b9b2c9;
+        color: #6c757d; 
     }
 
-    /* ENCABEZADO PRINCIPAL */
     .materias-heading {
-        background: linear-gradient(110deg, #44217c, #712fc3);
+        background: #212529; 
+        border: 1px solid #343a40;
         border-radius: 20px;
         padding: 30px;
+        color: #ffffff;
     }
 
-    /* RESUMEN */
     .materias-resumen {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #d1d5d6; 
+        border: 1px solid #c0c4c5;
         border-radius: 20px;
         padding: 25px;
+        color: #212529;
     }
 
     .materias-resumen-icon {
@@ -71,31 +72,32 @@
         border-radius: 15px;
         display: grid;
         place-items: center;
-        background: rgba(157,92,255,.16);
-        color: #c49bff;
+        background: #212529;
+        color: #fd7e14; 
         font-size: 1.7rem;
     }
 
-    /* TARJETAS DE MATERIAS */
     .materias-card {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #d1d5d6;
+        border: 1px solid #c0c4c5;
         border-radius: 20px;
         padding: 26px;
         height: 100%;
-        transition: transform .2s, border-color .2s;
+        color: #212529;
+        transition: transform .2s, box-shadow .2s, border-color .2s;
     }
 
     .materias-card:hover {
         transform: translateY(-4px);
-        border-color: rgba(167,115,255,.45);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-color: #fd7e14; 
     }
 
     .materias-icon {
         width: 60px;
         height: 60px;
-        background: rgba(157,92,255,.16);
-        color: #c49bff;
+        background: #212529;
+        color: #fd7e14; 
         border-radius: 16px;
         display: grid;
         place-items: center;
@@ -103,7 +105,7 @@
     }
 
     .materias-nombre {
-        color: #ffffff;
+        color: #212529; 
         font-weight: 700;
         margin-bottom: 8px;
     }
@@ -112,12 +114,12 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        color: #c8bfd8;
+        color: #495057; 
         margin-top: 14px;
     }
 
     .materias-detalle i {
-        color: #b68aff;
+        color: #fd7e14; 
     }
 
     /* ESTADOS */
@@ -132,22 +134,23 @@
     }
 
     .materias-estado.activa {
-        background: rgba(34,197,94,.14);
-        color: #86efac;
+        background: rgba(25, 135, 84, 0.15); 
+        color: #198754;
     }
 
     .materias-estado.inactiva {
-        background: rgba(245,158,11,.14);
-        color: #fcd34d;
+        background: rgba(255, 193, 7, 0.15); 
+        color: #d39e00;
     }
 
     /* SIN MATERIAS */
     .materias-vacio {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #ffffff; 
+        border: 1px dashed #c0c4c5;
         border-radius: 20px;
         padding: 55px 25px;
         text-align: center;
+        color: #212529;
     }
 
     .materias-vacio-icon {
@@ -157,8 +160,8 @@
         display: grid;
         place-items: center;
         margin: 0 auto 22px;
-        background: rgba(157,92,255,.16);
-        color: #c49bff;
+        background: rgba(253, 126, 20, 0.15); 
+        color: #fd7e14; 
         font-size: 2.2rem;
     }
 </style>

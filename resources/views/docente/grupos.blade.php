@@ -15,13 +15,13 @@
 <style>
     .grupos-panel {
         min-height: 100vh;
-        color: #f5f3ff;
+        background-color: #f4f6f9; 
+        color: #212529;
     }
 
-    /* MENÚ LATERAL */
     .grupos-sidebar {
-        background: #171323;
-        border-right: 1px solid rgba(255,255,255,.09);
+        background: #212529; 
+        border-right: 1px solid #343a40;
     }
 
     .grupos-nav {
@@ -30,73 +30,74 @@
         gap: 12px;
         padding: 13px 16px;
         border-radius: 12px;
-        color: #ccc6df;
+        color: #adb5bd;
         text-decoration: none;
         transition: .2s;
     }
 
     .grupos-nav:hover {
-        background: rgba(151,91,255,.13);
-        color: white;
+        background: rgba(255, 255, 255, .1);
+        color: #ffffff;
     }
 
     .grupos-nav.active {
-        background: #6934c5;
-        color: white;
+        background: #fd7e14;
+        color: #ffffff;
         font-weight: 600;
     }
 
     .grupos-muted {
-        color: #b9b2c9;
+        color: #6c757d;
     }
 
-    /* ENCABEZADO */
     .grupos-heading {
-        background: linear-gradient(110deg, #44217c, #712fc3);
-        border: 1px solid rgba(255,255,255,.1);
+        background: #212529;
+        border: 1px solid #343a40;
         border-radius: 20px;
         padding: 30px;
+        color: #ffffff;
     }
 
-    /* RESUMEN */
     .grupos-resumen {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #d1d5d6;
+        border: 1px solid #c0c4c5;
         border-radius: 20px;
         padding: 25px;
+        color: #212529;
     }
 
     .grupos-resumen-icon {
         width: 56px;
         height: 56px;
-        background: rgba(157,92,255,.16);
-        color: #c49bff;
+        background: #212529; 
+        color: #fd7e14;
         border-radius: 15px;
         display: grid;
         place-items: center;
         font-size: 1.7rem;
     }
 
-    /* TARJETAS */
     .grupos-card {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #d1d5d6;
+        border: 1px solid #c0c4c5;
         border-radius: 20px;
         padding: 26px;
         height: 100%;
-        transition: transform .2s, border-color .2s;
+        color: #212529;
+        transition: transform .2s, box-shadow .2s, border-color .2s;
     }
 
     .grupos-card:hover {
         transform: translateY(-4px);
-        border-color: rgba(167,115,255,.45);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-color: #fd7e14;
     }
 
     .grupos-icon {
         width: 62px;
         height: 62px;
-        background: rgba(157,92,255,.16);
-        color: #c49bff;
+        background: #212529;
+        color: #fd7e14;
         border-radius: 17px;
         display: grid;
         place-items: center;
@@ -108,8 +109,8 @@
         align-items: center;
         padding: 7px 13px;
         border-radius: 30px;
-        background: rgba(157,92,255,.16);
-        color: #d6bbff;
+        background: rgba(253, 126, 20, 0.15);
+        color: #d95c00;
         font-size: .8rem;
         font-weight: 600;
     }
@@ -119,41 +120,41 @@
         align-items: center;
         gap: 12px;
         margin-top: 17px;
-        color: #d0c9df;
+        color: #212529;
     }
 
     .grupos-detalle i {
-        color: #bc91ff;
+        color: #fd7e14;
         font-size: 1.2rem;
     }
 
-    /* SIN ASIGNACIONES */
     .grupos-vacio {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #ffffff;
+        border: 1px dashed #c0c4c5;
         border-radius: 20px;
         padding: 55px 25px;
         text-align: center;
+        color: #212529;
     }
 
     .grupos-vacio-icon {
         width: 80px;
         height: 80px;
         border-radius: 22px;
-        background: rgba(157,92,255,.16);
-        color: #c49bff;
+        background: rgba(253, 126, 20, 0.15);
+        color: #fd7e14;
         display: grid;
         place-items: center;
         margin: 0 auto 22px;
         font-size: 2.2rem;
     }
 
-    /* INFORMACIÓN */
     .grupos-info {
-        background: #211a33;
-        border: 1px solid rgba(255,255,255,.09);
+        background: #d1d5d6;
+        border: 1px solid #c0c4c5;
         border-radius: 18px;
         padding: 25px;
+        color: #212529;
     }
 </style>
 
