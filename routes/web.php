@@ -81,8 +81,19 @@ Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
     })->name('docente.grupos');
 
     // Mi Perfil
+    
+    // Mi Perfil
     Route::get('/perfil', function () {
-        return view('docente.perfil');
+
+        // Buscar los datos del docente que inició sesión
+        $docente = \App\Models\Docente::where(
+            'id_usuario',
+            auth()->id()
+        )->first();
+
+        // Enviar los datos a la vista
+        return view('docente.perfil', compact('docente'));
+
     })->name('docente.perfil');
 
 });
