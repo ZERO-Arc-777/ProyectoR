@@ -15,17 +15,26 @@
 @php
     $usuario = Auth::user();
     $docente = $docente ?? null;
+
+    // Obtener solamente los grupos asignados al docente.
+    $asignaciones = $docente
+        ? $docente->asignacionesGrupos()
+            ->with(['materia', 'periodo'])
+            ->orderBy('semestre')
+            ->orderBy('grupo')
+            ->get()
+        : collect();
 @endphp
 
 <style>
     .perfil-panel {
         min-height: 100vh;
-        background-color: #f4f6f9; 
-        color: #212529; 
+        background-color: #f4f6f9;
+        color: #212529;
     }
 
     .perfil-sidebar {
-        background: #212529; 
+        background: #212529;
         border-right: 1px solid #343a40;
     }
 
@@ -46,13 +55,13 @@
     }
 
     .perfil-nav.active {
-        background: #fd7e14; 
+        background: #fd7e14;
         color: #ffffff;
         font-weight: 600;
     }
 
     .perfil-muted {
-        color: #6c757d; 
+        color: #6c757d;
     }
 
     .perfil-heading {
@@ -68,14 +77,14 @@
         height: 82px;
         border-radius: 22px;
         background: rgba(253, 126, 20, 0.15);
-        color: #fd7e14; 
+        color: #fd7e14;
         display: grid;
         place-items: center;
         font-size: 2.5rem;
     }
 
     .perfil-card {
-        background: #d1d5d6; 
+        background: #d1d5d6;
         border: 1px solid #c0c4c5;
         border-radius: 20px;
         padding: 30px;
@@ -105,7 +114,7 @@
     }
 
     .perfil-field {
-        background: #ffffff; 
+        background: #ffffff;
         border: 1px solid #c0c4c5;
         border-radius: 12px;
         padding: 15px 18px;
@@ -114,14 +123,14 @@
 
     .perfil-label {
         display: block;
-        color: #6c757d; 
+        color: #6c757d;
         font-size: .85rem;
         margin-bottom: 8px;
     }
 
     .perfil-value {
         display: block;
-        color: #212529; 
+        color: #212529;
         font-size: 1rem;
         font-weight: 600;
         overflow-wrap: anywhere;
@@ -131,8 +140,8 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: rgba(253, 126, 20, 0.15); 
-        color: #d95c00; 
+        background: rgba(253, 126, 20, 0.15);
+        color: #d95c00;
         padding: 8px 15px;
         border-radius: 30px;
         font-size: .85rem;
@@ -147,9 +156,59 @@
         color: #212529;
     }
 
+    /* SECCIÓN DE LISTAS DE ASISTENCIA */
+
+    .perfil-asistencia {
+        background: #d1d5d6;
+        border: 1px solid #c0c4c5;
+        border-radius: 20px;
+        padding: 30px;
+        color: #212529;
+    }
+
+    .perfil-grupo {
+        background: #ffffff;
+        border: 1px solid #c0c4c5;
+        border-radius: 14px;
+        padding: 20px;
+        height: 100%;
+    }
+
+    .perfil-grupo-etiqueta {
+        color: #6c757d;
+        font-size: .9rem;
+    }
+
+    .perfil-descargar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 10px;
+        background: #fd7e14;
+        color: #ffffff;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .perfil-descargar:disabled {
+        background: #6c757d;
+        color: #ffffff;
+        cursor: not-allowed;
+        opacity: .8;
+    }
+
     @media (max-width: 767.98px) {
-        .perfil-heading { padding: 24px; }
-        .perfil-card { padding: 22px; }
+        .perfil-heading {
+            padding: 24px;
+        }
+
+        .perfil-card,
+        .perfil-asistencia {
+            padding: 22px;
+        }
     }
 </style>
 
@@ -226,6 +285,7 @@
 
             <!-- TÍTULO -->
             <div class="mb-4">
+
                 <h2 class="fw-bold mb-2">
                     Mi Perfil
                 </h2>
@@ -234,9 +294,10 @@
                     Consulta tu información personal y laboral
                     registrada en el sistema escolar.
                 </p>
+
             </div>
 
-            <!-- ENCABEZADO MORADO -->
+            <!-- ENCABEZADO DEL PERFIL -->
             <section class="perfil-heading mb-4">
 
                 <div class="d-flex flex-wrap align-items-center gap-4">
@@ -270,7 +331,7 @@
 
             </section>
 
-            <!-- TARJETAS DE INFORMACIÓN -->
+            <!-- INFORMACIÓN PERSONAL Y LABORAL -->
             <div class="row g-4">
 
                 <!-- INFORMACIÓN PERSONAL -->
@@ -279,16 +340,21 @@
                     <section class="perfil-card">
 
                         <h4 class="perfil-card-title">
+
                             <span class="perfil-card-icon">
                                 <i class="bi bi-person-vcard-fill"></i>
                             </span>
+
                             Información Personal
+
                         </h4>
 
                         <div class="row g-3">
 
+                            <!-- NOMBRES -->
                             <div class="col-12">
                                 <div class="perfil-field">
+
                                     <span class="perfil-label">
                                         Nombre(s)
                                     </span>
@@ -296,11 +362,14 @@
                                     <span class="perfil-value">
                                         {{ $docente?->nombres ?? $usuario?->nombre ?? 'No registrado' }}
                                     </span>
+
                                 </div>
                             </div>
 
+                            <!-- APELLIDO PATERNO -->
                             <div class="col-12 col-sm-6">
                                 <div class="perfil-field">
+
                                     <span class="perfil-label">
                                         Apellido paterno
                                     </span>
@@ -308,11 +377,14 @@
                                     <span class="perfil-value">
                                         {{ $docente?->apellido_paterno ?? 'No registrado' }}
                                     </span>
+
                                 </div>
                             </div>
 
+                            <!-- APELLIDO MATERNO -->
                             <div class="col-12 col-sm-6">
                                 <div class="perfil-field">
+
                                     <span class="perfil-label">
                                         Apellido materno
                                     </span>
@@ -320,11 +392,14 @@
                                     <span class="perfil-value">
                                         {{ $docente?->apellido_materno ?? 'No registrado' }}
                                     </span>
+
                                 </div>
                             </div>
 
+                            <!-- CURP -->
                             <div class="col-12">
                                 <div class="perfil-field">
+
                                     <span class="perfil-label">
                                         CURP
                                     </span>
@@ -332,6 +407,7 @@
                                     <span class="perfil-value">
                                         {{ $docente?->curp ?? 'No registrado' }}
                                     </span>
+
                                 </div>
                             </div>
 
@@ -347,16 +423,21 @@
                     <section class="perfil-card">
 
                         <h4 class="perfil-card-title">
+
                             <span class="perfil-card-icon">
                                 <i class="bi bi-briefcase-fill"></i>
                             </span>
+
                             Información Laboral
+
                         </h4>
 
                         <div class="row g-3">
 
+                            <!-- NÚMERO DE EMPLEADO -->
                             <div class="col-12 col-sm-6">
                                 <div class="perfil-field">
+
                                     <span class="perfil-label">
                                         Número de empleado
                                     </span>
@@ -364,11 +445,14 @@
                                     <span class="perfil-value">
                                         {{ $docente?->numero_empleado ?? 'No registrado' }}
                                     </span>
+
                                 </div>
                             </div>
 
+                            <!-- ESTADO -->
                             <div class="col-12 col-sm-6">
                                 <div class="perfil-field">
+
                                     <span class="perfil-label">
                                         Estado
                                     </span>
@@ -376,11 +460,14 @@
                                     <span class="perfil-value">
                                         {{ $docente?->estado ?? 'No registrado' }}
                                     </span>
+
                                 </div>
                             </div>
 
+                            <!-- CÉDULA PROFESIONAL -->
                             <div class="col-12">
                                 <div class="perfil-field">
+
                                     <span class="perfil-label">
                                         Cédula profesional
                                     </span>
@@ -388,11 +475,14 @@
                                     <span class="perfil-value">
                                         {{ $docente?->cedula_profesional ?? 'No registrada' }}
                                     </span>
+
                                 </div>
                             </div>
 
+                            <!-- CORREO ELECTRÓNICO -->
                             <div class="col-12">
                                 <div class="perfil-field">
+
                                     <span class="perfil-label">
                                         Correo electrónico
                                     </span>
@@ -400,6 +490,7 @@
                                     <span class="perfil-value">
                                         {{ $usuario?->correo ?? 'No registrado' }}
                                     </span>
+
                                 </div>
                             </div>
 
@@ -411,6 +502,113 @@
 
             </div>
 
+            <!-- NUEVA SECCIÓN: LISTAS DE ASISTENCIA -->
+            <section class="perfil-asistencia mt-4"
+                     aria-labelledby="titulo-asistencia">
+
+                <h4 class="perfil-card-title mb-2"
+                    id="titulo-asistencia">
+
+                    <span class="perfil-card-icon">
+                        <i class="bi bi-clipboard-check-fill"></i>
+                    </span>
+
+                    Listas de asistencia
+
+                </h4>
+
+                <p class="perfil-muted mb-4">
+                    Consulta tus grupos asignados y descarga
+                    las listas de asistencia correspondientes
+                    a tus materias.
+                </p>
+
+                <!-- CUANDO NO EXISTEN GRUPOS -->
+                @if ($asignaciones->isEmpty())
+
+                    <div class="perfil-field">
+
+                        <div class="d-flex align-items-center gap-3">
+
+                            <i class="bi bi-info-circle-fill fs-4"></i>
+
+                            <p class="mb-0 perfil-muted">
+                                Aún no tienes grupos asignados
+                                para consultar listas de asistencia.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                @else
+
+                    <!-- GRUPOS DEL DOCENTE -->
+                    <div class="row g-3">
+
+                        @foreach ($asignaciones as $asignacion)
+
+                            <div class="col-12 col-xl-6">
+
+                                <div class="perfil-grupo">
+
+                                    <!-- GRUPO -->
+                                    <h5 class="fw-bold mb-3">
+
+                                        <i class="bi bi-people-fill me-2"></i>
+
+                                        Grupo
+                                        {{ $asignacion->semestre }}°
+                                        {{ $asignacion->grupo }}
+
+                                    </h5>
+
+                                    <!-- MATERIA -->
+                                    <p class="mb-2">
+
+                                        <strong>Materia:</strong>
+
+                                        {{ $asignacion->materia?->nombre ?? 'No registrada' }}
+
+                                    </p>
+
+                                    <!-- PERIODO -->
+                                    <p class="perfil-grupo-etiqueta mb-3">
+
+                                        <strong>Periodo escolar:</strong>
+
+                                        {{ $asignacion->periodo?->nombre ?? 'No registrado' }}
+
+                                    </p>
+
+                                    
+<!-- BOTÓN DE DESCARGA DE ASISTENCIA -->
+<a
+    href="{{ route('docente.lista-asistencia', ['asignacion' => $asignacion->id_asignacion]) }}"
+    class="perfil-descargar"
+    title="Descargar lista de asistencia"
+>
+    <i class="bi bi-download"></i>
+    Descargar lista
+</a>
+
+<small class="d-block perfil-muted mt-2">
+    Descarga la lista de asistencia de este grupo
+    en formato CSV compatible con Excel.
+</small>
+
+                                </div>
+
+                            </div>
+
+                        @endforeach
+
+                    </div>
+
+                @endif
+
+            </section>
+
             <!-- INFORMACIÓN ADICIONAL -->
             <section class="perfil-info mt-4">
 
@@ -421,17 +619,20 @@
                     </div>
 
                     <div>
+
                         <h5 class="fw-bold mb-2">
                             Información de tu perfil
                         </h5>
 
                         <p class="perfil-muted mb-0">
-                            Este apartado permite consultar los
-                            datos personales y laborales del docente.
-                            La información disponible dependerá de
-                            los datos registrados y vinculados
-                            a su cuenta en el sistema escolar.
+                            Este apartado permite consultar tus
+                            datos personales y laborales, así como
+                            visualizar los grupos asignados para
+                            la futura descarga de listas de asistencia.
+                            La información dependerá de los registros
+                            vinculados a tu cuenta docente.
                         </p>
+
                     </div>
 
                 </div>

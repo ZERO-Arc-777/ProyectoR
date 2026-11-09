@@ -93,3 +93,13 @@ Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
     Route::get('/perfil', [PerfilController::class, 'index'])->name('docente.perfil');
 
 });
+
+
+// DESCARGA DE LISTAS DE ASISTENCIA DEL DOCENTE
+Route::get(
+    '/docente/lista-asistencia/{asignacion}',
+    [\App\Http\Controllers\Docente\ListaAsistenciaController::class, 'descargar']
+)
+->middleware(['auth', 'role:2'])
+->whereNumber('asignacion')
+->name('docente.lista-asistencia');
