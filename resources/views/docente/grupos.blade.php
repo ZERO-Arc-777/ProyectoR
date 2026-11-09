@@ -18,6 +18,7 @@
         color: #f5f3ff;
     }
 
+    /* MENÚ LATERAL */
     .grupos-sidebar {
         background: #171323;
         border-right: 1px solid rgba(255,255,255,.09);
@@ -49,6 +50,7 @@
         color: #b9b2c9;
     }
 
+    /* ENCABEZADO */
     .grupos-heading {
         background: linear-gradient(110deg, #44217c, #712fc3);
         border: 1px solid rgba(255,255,255,.1);
@@ -56,34 +58,97 @@
         padding: 30px;
     }
 
+    /* RESUMEN */
+    .grupos-resumen {
+        background: #211a33;
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 20px;
+        padding: 25px;
+    }
+
+    .grupos-resumen-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(157,92,255,.16);
+        color: #c49bff;
+        border-radius: 15px;
+        display: grid;
+        place-items: center;
+        font-size: 1.7rem;
+    }
+
+    /* TARJETAS */
     .grupos-card {
         background: #211a33;
         border: 1px solid rgba(255,255,255,.09);
         border-radius: 20px;
-        padding: 32px;
+        padding: 26px;
+        height: 100%;
+        transition: transform .2s, border-color .2s;
+    }
+
+    .grupos-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(167,115,255,.45);
     }
 
     .grupos-icon {
-        width: 74px;
-        height: 74px;
+        width: 62px;
+        height: 62px;
         background: rgba(157,92,255,.16);
         color: #c49bff;
-        border-radius: 20px;
+        border-radius: 17px;
         display: grid;
         place-items: center;
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
-    .grupos-status {
-        display: inline-block;
-        background: #49316a;
-        color: #d6bbff;
+    .grupos-etiqueta {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 13px;
         border-radius: 30px;
-        padding: 9px 16px;
-        font-size: .85rem;
+        background: rgba(157,92,255,.16);
+        color: #d6bbff;
+        font-size: .8rem;
         font-weight: 600;
     }
 
+    .grupos-detalle {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 17px;
+        color: #d0c9df;
+    }
+
+    .grupos-detalle i {
+        color: #bc91ff;
+        font-size: 1.2rem;
+    }
+
+    /* SIN ASIGNACIONES */
+    .grupos-vacio {
+        background: #211a33;
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 20px;
+        padding: 55px 25px;
+        text-align: center;
+    }
+
+    .grupos-vacio-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 22px;
+        background: rgba(157,92,255,.16);
+        color: #c49bff;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 22px;
+        font-size: 2.2rem;
+    }
+
+    /* INFORMACIÓN */
     .grupos-info {
         background: #211a33;
         border: 1px solid rgba(255,255,255,.09);
@@ -93,6 +158,7 @@
 </style>
 
 <div class="container-fluid grupos-panel">
+
     <div class="row min-vh-100">
 
         <!-- MENÚ LATERAL -->
@@ -171,8 +237,8 @@
                 </h2>
 
                 <p class="grupos-muted mb-0">
-                    Consulta la información de los grupos
-                    que te sean asignados.
+                    Consulta los grupos y las materias
+                    que tienes asignados.
                 </p>
 
             </div>
@@ -198,40 +264,143 @@
 
             </section>
 
-            <!-- GRUPOS ASIGNADOS -->
-            <section class="grupos-card text-center mb-4">
+            <!-- RESUMEN -->
+            <section class="grupos-resumen mb-4">
 
-                <div class="grupos-icon mx-auto mb-4">
-                    <i class="bi bi-person-lines-fill"></i>
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="grupos-resumen-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+
+                    <div>
+                        <p class="grupos-muted mb-1">
+                            Total de asignaciones de grupos
+                        </p>
+
+                        <h3 class="fw-bold mb-0">
+                            {{ $asignaciones->count() }}
+                        </h3>
+                    </div>
+
                 </div>
 
-                <h4 class="fw-bold mb-3">
-                    Grupos asignados
+            </section>
+
+            <!-- GRUPOS ASIGNADOS -->
+            <section aria-labelledby="titulo-grupos">
+
+                <h4 class="fw-bold mb-4" id="titulo-grupos">
+                    <i class="bi bi-collection-fill me-2"></i>
+                    Mis grupos asignados
                 </h4>
 
-                <p class="grupos-muted mx-auto"
-                   style="max-width: 580px;">
-                    En esta sección podrás consultar los grupos
-                    que tengas asignados, una vez que se implemente
-                    la gestión de grupos y su relación
-                    con los docentes.
-                </p>
+                <div class="row g-4">
 
-                <span class="grupos-status">
-                    <i class="bi bi-clock me-1"></i>
-                    Funcionalidad en desarrollo
-                </span>
+                    @forelse ($asignaciones as $asignacion)
+
+                        <div class="col-12 col-lg-6 col-xxl-4">
+
+                            <article class="grupos-card">
+
+                                <!-- ICONO Y SEMESTRE -->
+                                <div class="d-flex justify-content-between
+                                            align-items-start gap-3 mb-4">
+
+                                    <div class="grupos-icon">
+                                        <i class="bi bi-people-fill"></i>
+                                    </div>
+
+                                    <span class="grupos-etiqueta">
+                                        Semestre {{ $asignacion->semestre }}
+                                    </span>
+
+                                </div>
+
+                                <!-- NOMBRE DEL GRUPO -->
+                                <h4 class="fw-bold mb-2">
+                                    Grupo {{ $asignacion->semestre }}°
+                                    {{ $asignacion->grupo }}
+                                </h4>
+
+                                <p class="grupos-muted mb-3">
+                                    Grupo académico asignado.
+                                </p>
+
+                                <hr class="border-secondary">
+
+                                <!-- MATERIA -->
+                                <div class="grupos-detalle">
+                                    <i class="bi bi-book-half"></i>
+
+                                    <span>
+                                        {{ $asignacion->materia?->nombre
+                                           ?? 'Materia no disponible' }}
+                                    </span>
+                                </div>
+
+                                <!-- PERIODO ESCOLAR -->
+                                <div class="grupos-detalle">
+                                    <i class="bi bi-calendar3"></i>
+
+                                    <span>
+                                        {{ $asignacion->periodo?->nombre
+                                           ?? 'Periodo no disponible' }}
+                                    </span>
+                                </div>
+
+                                <!-- IDENTIFICADOR -->
+                                <div class="grupos-detalle">
+                                    <i class="bi bi-hash"></i>
+
+                                    <span>
+                                        Asignación
+                                        #{{ $asignacion->id_asignacion }}
+                                    </span>
+                                </div>
+
+                            </article>
+
+                        </div>
+
+                    @empty
+
+                        <!-- SIN GRUPOS ASIGNADOS -->
+                        <div class="col-12">
+
+                            <div class="grupos-vacio">
+
+                                <div class="grupos-vacio-icon">
+                                    <i class="bi bi-people"></i>
+                                </div>
+
+                                <h4 class="fw-bold mb-3">
+                                    Aún no tienes grupos asignados
+                                </h4>
+
+                                <p class="grupos-muted mx-auto mb-0"
+                                   style="max-width: 530px;">
+                                    Cuando se registren grupos a tu nombre,
+                                    podrás consultarlos aquí junto con
+                                    su semestre, materia y periodo escolar.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    @endforelse
+
+                </div>
 
             </section>
 
             <!-- INFORMACIÓN GENERAL -->
-            <section class="grupos-info">
+            <section class="grupos-info mt-4">
 
                 <div class="d-flex align-items-start gap-3">
 
-                    <div class="grupos-icon flex-shrink-0"
-                         style="width: 52px; height: 52px;
-                                font-size: 1.4rem; border-radius: 14px;">
+                    <div class="grupos-resumen-icon flex-shrink-0">
                         <i class="bi bi-info-circle-fill"></i>
                     </div>
 
@@ -242,13 +411,10 @@
                         </h5>
 
                         <p class="grupos-muted mb-0">
-                            Este apartado permitirá al docente
-                            consultar la información académica
-                            de sus grupos asignados.
-
-                            Las funciones estarán disponibles
-                            conforme avance el desarrollo
-                            del módulo docente.
+                            Aquí se muestran las asignaciones académicas
+                            asociadas a tu cuenta docente.
+                            Si necesitas modificar tus grupos,
+                            comunícate con el área administrativa.
                         </p>
 
                     </div>
@@ -260,6 +426,7 @@
         </main>
 
     </div>
+
 </div>
 
 @endsection
