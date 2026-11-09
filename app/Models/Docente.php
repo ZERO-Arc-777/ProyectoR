@@ -24,4 +24,15 @@ class Docente extends Model
     {
         return $this->belongsTo(User::class, 'id_usuario', 'id_usuario');
     }
+    
+public function materias()
+{
+    return $this->belongsToMany(
+        Materia::class,
+        'docente_materia',
+        'id_docente',
+        'id_materia'
+    );
+}
+
 }
