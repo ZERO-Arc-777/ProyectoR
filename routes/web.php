@@ -68,8 +68,27 @@ Route::middleware(['auth', 'role:3'])->prefix('alumno')->group(function () {
     Route::post('/mi-expediente/subir', [DocumentoController::class, 'store'])->name('alumno.documentos.store');
 });
 
+
 Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
+
+    // Panel principal del docente
     Route::get('/', function () {
         return view('docente.dashboard');
     })->name('docente.dashboard');
+
+    // Mis Materias
+    Route::get('/materias', function () {
+        return view('docente.materias');
+    })->name('docente.materias');
+
+    // Mis Grupos
+    Route::get('/grupos', function () {
+        return view('docente.grupos');
+    })->name('docente.grupos');
+
+    // Mi Perfil
+    Route::get('/perfil', function () {
+        return view('docente.perfil');
+    })->name('docente.perfil');
+
 });
