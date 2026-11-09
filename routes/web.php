@@ -108,7 +108,10 @@ Route::middleware(['auth', 'role:3'])->prefix('alumno')->group(function () {
 
 Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
 
-    // Panel principal del docente
+    // ======================================
+    // PANEL PRINCIPAL DEL DOCENTE
+    // ======================================
+
     Route::get('/', function () {
         return view('docente.dashboard');
     })->name('docente.dashboard');
@@ -133,7 +136,6 @@ Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
                 ->orderBy('materias.nombre')
                 ->get();
         } else {
-            // Si el usuario no tiene registro de docente
             $materias = collect();
         }
 
@@ -144,11 +146,32 @@ Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
 
 
     // ======================================
-    // MIS GRUPOS
+    // MIS GRUPOS - CONEXIÓN CON MYSQL
     // ======================================
 
     Route::get('/grupos', function () {
-        return view('docente.grupos');
+
+        // Identificar al docente que inició sesión
+        $docente = \App\Models\Docente::where(
+            'id_usuario',
+            auth()->id()
+        )->first();
+
+        // Consultar sus grupos, materias y periodos escolares
+        if ($docente) {
+            $asignaciones = $docente->asignacionesGrupos()
+                ->with(['materia', 'periodo'])
+                ->orderBy('semestre')
+                ->orderBy('grupo')
+                ->get();
+        } else {
+            // Si no tiene registro de docente
+            $asignaciones = collect();
+        }
+
+        // Enviar sus grupos a la vista
+        return view('docente.grupos', compact('asignaciones'));
+
     })->name('docente.grupos');
 
 
