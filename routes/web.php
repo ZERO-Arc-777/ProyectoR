@@ -28,14 +28,20 @@ Route::middleware(['auth', 'role:1'])->prefix('admin')->group(function () {
     Route::get('/usuarios', [UsuarioController::class, 'index'])->name('admin.usuarios');
     Route::get('/usuarios/crear', [UsuarioController::class, 'create'])->name('admin.usuarios.create');
     Route::post('/usuarios', [UsuarioController::class, 'store'])->name('admin.usuarios.store');
+    Route::get('/usuarios/{id}/editar', [UsuarioController::class, 'edit'])->name('admin.usuarios.edit');
+    Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->name('admin.usuarios.update');
 
     Route::get('/alumnos', [AlumnoController::class, 'index'])->name('admin.alumnos');
     Route::get('/alumnos/crear', [AlumnoController::class, 'create'])->name('admin.alumnos.create');
     Route::post('/alumnos', [AlumnoController::class, 'store'])->name('admin.alumnos.store');
+    Route::get('/alumnos/{id}/editar', [AlumnoController::class, 'edit'])->name('admin.alumnos.edit');
+    Route::put('/alumnos/{id}', [AlumnoController::class, 'update'])->name('admin.alumnos.update');
 
     Route::get('/docentes', [DocenteController::class, 'index'])->name('admin.docentes');
     Route::get('/docentes/crear', [DocenteController::class, 'create'])->name('admin.docentes.create');
     Route::post('/docentes', [DocenteController::class, 'store'])->name('admin.docentes.store');
+    Route::get('/docentes/{id}/editar', [DocenteController::class, 'edit'])->name('admin.docentes.edit');
+    Route::put('/docentes/{id}', [DocenteController::class, 'update'])->name('admin.docentes.update');
 
     Route::get('/materias', [MateriaController::class, 'index'])->name('admin.materias');
 
