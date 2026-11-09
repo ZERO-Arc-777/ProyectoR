@@ -1,84 +1,95 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Inscribir Alumno</title>
-</head>
-<body>
+@extends('layouts.app')
 
-    <h1>Crear Expediente de Alumno</h1>
-    <a href="{{ route('admin.alumnos') }}">Volver a la lista</a>
-    <hr>
+@section('titulo', 'Crear Expediente de Alumno')
+@section('usuario_header', 'ADMINISTRATIVO')
 
-    @if ($errors->any())
-        <div style="color: red; margin-bottom: 15px;">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+@section('contenido')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<div class="container mt-4 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4 w-100" style="max-width: 700px; background-color: #d1d5d6;">
+        
+        <div class="card-header bg-dark text-white text-center py-3" style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
+            <h5 class="mb-0 fw-bold">CREAR EXPEDIENTE DE ALUMNO</h5>
         </div>
-    @endif
 
-    <form action="{{ route('admin.alumnos.store') }}" method="POST">
-        @csrf
+        <div class="card-body p-4">
+            <a href="{{ route('admin.alumnos') }}" class="text-decoration-none text-primary fw-bold mb-3 d-block">Volver a la lista</a>
+            
+            <form action="{{ route('admin.alumnos.store') }}" method="POST">
+                @csrf
 
-        <p>
-            <label>Vincular a Cuenta de Usuario:</label><br>
-            <select name="id_usuario" required>
-                <option value="">-- Selecciona una cuenta --</option>
-                @foreach ($usuariosDisponibles as $user)
-                    <option value="{{ $user->id_usuario }}">{{ $user->correo }} (ID: {{ $user->id_usuario }})</option>
-                @endforeach
-            </select>
-        </p>
+                <div class="mb-3 text-start">
+                    <label class="fw-bold text-dark mb-1 ms-1">Vincular a Cuenta de Usuario:</label>
+                    <select name="id_usuario" id="buscador-usuarios" class="form-select" required>
+                        <option value="">-- Selecciona una cuenta --</option>
+                        @foreach($usuarios as $user)
+                            <option value="{{ $user->id_usuario }}">
+                                {{ $user->id_usuario }} - {{ $user->nombre }} ({{ $user->correo }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-        <p>
-            <label>Matrícula Oficial:</label><br>
-            <input type="text" name="matricula" required maxlength="20">
-        </p>
+                <div class="mb-3 text-start">
+                    <label class="fw-bold text-dark mb-1 ms-1">CURP:</label>
+                    <input type="text" name="curp" class="form-control text-uppercase" maxlength="18" required>
+                </div>
 
-        <p>
-            <label>CURP:</label><br>
-            <input type="text" name="curp" required maxlength="18" style="text-transform: uppercase;">
-        </p>
+                <div class="row">
+                    <div class="col-md-12 mb-3 text-start">
+                        <label class="fw-bold text-dark mb-1 ms-1">Nombre(s):</label>
+                        <input type="text" name="nombres" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3 text-start">
+                        <label class="fw-bold text-dark mb-1 ms-1">Apellido Paterno:</label>
+                        <input type="text" name="apellido_paterno" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3 text-start">
+                        <label class="fw-bold text-dark mb-1 ms-1">Apellido Materno:</label>
+                        <input type="text" name="apellido_materno" class="form-control">
+                    </div>
+                </div>
 
-        <p>
-            <label>Nombre(s):</label><br>
-            <input type="text" name="nombres" required>
-        </p>
+                <div class="row">
+                    <div class="col-md-6 mb-3 text-start">
+                        <label class="fw-bold text-dark mb-1 ms-1">Semestre:</label>
+                        <select name="semestre" class="form-select" required>
+                            <option value="1">1° Semestre</option>
+                            <option value="2">2° Semestre</option>
+                            <option value="3">3° Semestre</option>
+                            <option value="4">4° Semestre</option>
+                            <option value="5">5° Semestre</option>
+                            <option value="6">6° Semestre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-4 text-start">
+                        <label class="fw-bold text-dark mb-1 ms-1">Grupo:</label>
+                        <select name="grupo" class="form-select" required>
+                            <option value="A">Grupo A</option>
+                            <option value="B">Grupo B</option>
+                            <option value="C">Grupo C</option>
+                        </select>
+                    </div>
+                </div>
 
-        <p>
-            <label>Apellido Paterno:</label><br>
-            <input type="text" name="apellido_paterno" required>
-        </p>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-dark fw-bold px-4">Guardar Expediente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-        <p>
-            <label>Apellido Materno:</label><br>
-            <input type="text" name="apellido_materno">
-        </p>
-
-        <p>
-            <label>Semestre:</label><br>
-            <select name="semestre" required>
-                <option value="1">1° Semestre</option>
-                <option value="3">3° Semestre</option>
-                <option value="5">5° Semestre</option>
-            </select>
-        </p>
-
-        <p>
-            <label>Grupo:</label><br>
-            <select name="grupo" required>
-                <option value="A">Grupo A</option>
-                <option value="B">Grupo B</option>
-            </select>
-        </p>
-
-        <p>
-            <button type="submit">Guardar Expediente</button>
-        </p>
-    </form>
-
-</body>
-</html>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#buscador-usuarios').select2({
+            placeholder: "-- Escribe el nombre o correo del usuario --",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+</script>
+@endsection

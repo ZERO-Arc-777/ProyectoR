@@ -19,7 +19,7 @@
             <a href="{{ route('admin.alumnos') }}" class="list-group-item list-group-item-action py-3 text-dark">Alumnos</a>
             <a href="{{ route('admin.docentes') }}" class="list-group-item list-group-item-action py-3 text-dark">Docentes</a>
             <a href="{{ route('admin.materias') }}" class="list-group-item list-group-item-action py-3 text-dark">Materias</a>
-            <a href="{{ route('admin.pagos') }}" class="list-group-item list-group-item-action py-3 text-dark">Pagos</a>
+            <a href="{{ route('admin.pagos') }}" class="list-group-item list-group-item-action py-3 text-dark">Seguimiento de pagos</a>
             
             <a href="{{ route('admin.revision.inscripciones') }}" class="list-group-item list-group-item-action py-3 text-dark bg-opacity-25" style="background-color: #e9ecef;">Rev. Inscripciones</a>
             <a href="{{ route('admin.revision.reinscripciones') }}" class="list-group-item list-group-item-action py-3 text-dark bg-opacity-25" style="background-color: #e9ecef;">Rev. Reinscripciones</a>
@@ -75,7 +75,7 @@
                 <a href="{{ route('admin.pagos') }}" class="text-decoration-none">
                     <div class="card h-100 border-0 shadow" style="background-color: #d1d5d6; border-radius: 12px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                         <div class="card-body text-center d-flex align-items-center justify-content-center" style="min-height: 120px;">
-                            <h5 class="fw-bold text-dark mb-0">PAGOS</h5>
+                            <h5 class="fw-bold text-dark mb-0">SEGUIMIENTO DE PAGOS</h5>
                         </div>
                     </div>
                 </a>
