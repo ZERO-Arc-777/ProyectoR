@@ -54,6 +54,11 @@ Route::middleware(['auth', 'role:1'])->prefix('admin')->group(function () {
     Route::put('/docentes/{id}', [DocenteController::class, 'update'])->name('admin.docentes.update');
 
     Route::get('/materias', [MateriaController::class, 'index'])->name('admin.materias');
+    Route::get('/materias/create', [MateriaController::class, 'create'])->name('admin.materias.create');
+    Route::post('/materias', [MateriaController::class, 'store'])->name('admin.materias.store');
+    Route::get('/materias/{id}/edit', [MateriaController::class, 'edit'])->name('admin.materias.edit');
+    Route::put('/materias/{id}', [MateriaController::class, 'update'])->name('admin.materias.update');
+    Route::post('/materias/periodo', [MateriaController::class, 'actualizarPeriodo'])->name('admin.materias.periodo');
 
     Route::get('/pagos', [PagoController::class, 'index'])->name('admin.pagos');
     Route::put('/pagos/{id_solicitud}/estado', [PagoController::class, 'updateEstado'])->name('admin.pagos.updateEstado');

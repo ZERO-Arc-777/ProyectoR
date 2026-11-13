@@ -12,24 +12,23 @@ class ExpedienteController
     {
         $buscar = $request->get('buscar');
         $documentos = $this->obtenerDocumentos('INSCRIPCION', $buscar);
-        return view('admin.expedientes.revision', compact('documentos', 'buscar'))->with('titulo', 'Revisión de Inscripciones');
+        return view('admin.expedientes.index', compact('documentos', 'buscar'))->with('titulo', 'Revisión de Inscripciones');
     }
 
     public function reinscripciones(Request $request)
     {
         $buscar = $request->get('buscar');
         $documentos = $this->obtenerDocumentos('REINSCRIPCION', $buscar);
-        return view('admin.expedientes.revision', compact('documentos', 'buscar'))->with('titulo', 'Revisión de Reinscripciones');
+        return view('admin.expedientes.index', compact('documentos', 'buscar'))->with('titulo', 'Revisión de Reinscripciones');
     }
 
     public function egresos(Request $request)
     {
         $buscar = $request->get('buscar');
         $documentos = $this->obtenerDocumentos('EGRESO', $buscar);
-        return view('admin.expedientes.revision', compact('documentos', 'buscar'))->with('titulo', 'Revisión de Egresos');
+        return view('admin.expedientes.index', compact('documentos', 'buscar'))->with('titulo', 'Revisión de Egresos');
     }
 
-    // Función privada para no repetir el código del buscador 3 veces
     private function obtenerDocumentos($proceso, $buscar)
     {
         return Documento::with('alumno')
@@ -41,7 +40,7 @@ class ExpedienteController
                       ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%");
                 });
             })
-            ->orderBy('created_at', 'asc') // Los más antiguos primero
+            ->orderBy('created_at', 'asc')
             ->paginate(10);
     }
 
