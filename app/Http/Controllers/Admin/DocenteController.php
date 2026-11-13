@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Docente;
 use App\Models\User;
+use App\Models\MateriaA;
+use App\Models\AsignacionAcademica;
+use App\Models\Configuracion;
 
 class DocenteController
 {
@@ -33,7 +36,9 @@ class DocenteController
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
         
-        return view('admin.docentes.create', compact('usuarios'));
+        $materias = MateriaA::where('estado', 'ACTIVA')->get();
+        
+        return view('admin.docentes.create', compact('usuarios', 'materias'));
     }
 
     public function store(Request $request)
@@ -49,7 +54,22 @@ class DocenteController
         $docente->estado = 'ACTIVO';
         $docente->save();
 
-        return redirect()->route('admin.docentes')->with('success', 'Docente registrado correctamente.');
+        $periodoActual = Configuracion::where('clave', 'periodo_actual')->first()->valor ?? 'No definido';
+
+        if ($request->has('materias') && is_array($request->materias)) {
+            foreach ($request->materias as $index => $id_materia) {
+                if (!empty($id_materia)) {
+                    AsignacionAcademica::create([
+                        'id_docente' => $docente->id_docente,
+                        'id_materia' => $id_materia,
+                        'grupo'      => $request->grupos[$index] ?? 'A',
+                        'periodo'    => $periodoActual
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('admin.docentes')->with('success', 'Docente y sus asignaciones registradas correctamente.');
     }
 
     public function edit($id)
@@ -64,7 +84,15 @@ class DocenteController
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
 
-        return view('admin.docentes.editorD', compact('docente', 'usuarios'));
+        // 4. Cargamos las materias activas y las asignaciones que ya tiene este docente en el periodo actual
+        $materias = MateriaA::where('estado', 'ACTIVA')->get();
+        $periodoActual = Configuracion::where('clave', 'periodo_actual')->first()->valor ?? 'No definido';
+        
+        $asignacionesActuales = AsignacionAcademica::where('id_docente', $docente->id_docente)
+            ->where('periodo', $periodoActual)
+            ->get();
+
+        return view('admin.docentes.editorD', compact('docente', 'usuarios', 'materias', 'asignacionesActuales'));
     }
 
     public function update(Request $request, $id)
@@ -82,6 +110,25 @@ class DocenteController
         
         $docente->save();
 
-        return redirect()->route('admin.docentes')->with('success', 'Expediente de docente actualizado correctamente.');
+        $periodoActual = Configuracion::where('clave', 'periodo_actual')->first()->valor ?? 'No definido';
+
+        AsignacionAcademica::where('id_docente', $docente->id_docente)
+            ->where('periodo', $periodoActual)
+            ->delete();
+
+        if ($request->has('materias') && is_array($request->materias)) {
+            foreach ($request->materias as $index => $id_materia) {
+                if (!empty($id_materia)) {
+                    AsignacionAcademica::create([
+                        'id_docente' => $docente->id_docente,
+                        'id_materia' => $id_materia,
+                        'grupo'      => $request->grupos[$index] ?? 'A',
+                        'periodo'    => $periodoActual
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('admin.docentes')->with('success', 'Expediente de docente y asignaciones actualizados correctamente.');
     }
 }
