@@ -11,12 +11,27 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, $roleId): Response
     {
+        // Verificar que el usuario haya iniciado sesión.
         if (!Auth::check()) {
-            return redirect('/')->with('error', 'Debes iniciar sesión primero.');
+            return redirect('/')->with(
+                'error',
+                'Debes iniciar sesión primero.'
+            );
         }
 
-        if (Auth::user()->id_rol != $roleId) {
-            abort(403, 'Acceso denegado. Tu cuenta no tiene permisos para ver esta sección.');
+        $usuario = Auth::user();
+
+        // Impedir el acceso a cuentas inactivas.
+        if ($usuario->estado !== 'ACTIVO') {
+            abort(403, 'Tu cuenta se encuentra inactiva.');
+        }
+
+        // Comprobar que el usuario tenga el rol autorizado.
+        if ((int) $usuario->id_rol !== (int) $roleId) {
+            abort(
+                403,
+                'Acceso denegado. Tu cuenta no tiene permisos para ver esta sección.'
+            );
         }
 
         return $next($request);
