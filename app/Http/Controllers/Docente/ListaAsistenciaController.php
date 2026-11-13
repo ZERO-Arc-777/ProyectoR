@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Docente;
 
 use App\Models\Docente;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ListaAsistenciaController
 {
-    public function descargar(int $asignacion)
+    public function descargar(Request $request, int $asignacion)
     {
         // Identificar al docente que inició sesión.
         $docente = Docente::where(
@@ -16,19 +18,87 @@ class ListaAsistenciaController
             Auth::id()
         )->firstOrFail();
 
-        // Buscar únicamente grupos asignados a este docente.
-        $grupo = $docente->asignacionesGrupos()
-            ->with(['materia', 'periodo'])
-            ->where('id_asignacion', $asignacion)
-            ->firstOrFail();
+        // Identificar el origen de la asignación.
+        $origen = $request->query('origen', 'anterior');
 
-        // Obtener alumnos del semestre y grupo correspondiente,
-        // inscritos o reinscritos en el periodo escolar asignado.
+        // Permitir únicamente los orígenes conocidos.
+        abort_unless(
+            in_array($origen, ['anterior', 'administrador'], true),
+            404
+        );
+
+        if ($origen === 'administrador') {
+
+            // Comprobar que exista la nueva tabla.
+            abort_unless(
+                Schema::hasTable('asignaciones_academicas'),
+                404
+            );
+
+            // Buscar únicamente una asignación del docente actual.
+            $registro = DB::table('asignaciones_academicas as aa')
+                ->join(
+                    'materias as m',
+                    'm.id_materia',
+                    '=',
+                    'aa.id_materia'
+                )
+                ->where('aa.id_asignacion', $asignacion)
+                ->where('aa.id_docente', $docente->id_docente)
+                ->select(
+                    'aa.id_asignacion',
+                    'aa.grupo',
+                    'aa.periodo',
+                    'm.semestre',
+                    'm.nombre as nombre_materia'
+                )
+                ->first();
+
+            // Impedir acceso a asignaciones inexistentes o ajenas.
+            abort_unless($registro, 404);
+
+            // Relacionar el periodo del Administrador
+            // con el periodo escolar registrado.
+            $periodo = DB::table('periodos_escolares')
+                ->where('nombre', $registro->periodo)
+                ->first(['id_periodo', 'nombre']);
+
+            // Evitar generar listas con un periodo desconocido.
+            abort_unless(
+                $periodo,
+                409,
+                'No se puede generar la lista: el periodo de la asignación no coincide con un periodo escolar registrado.'
+            );
+
+            // Adaptar la nueva asignación al formato de la lista.
+            $grupo = (object) [
+                'id_asignacion' => $registro->id_asignacion,
+                'semestre' => $registro->semestre,
+                'grupo' => $registro->grupo,
+                'id_periodo' => $periodo->id_periodo,
+                'materia' => (object) [
+                    'nombre' => $registro->nombre_materia,
+                ],
+                'periodo' => $periodo,
+            ];
+
+        } else {
+
+            // Conservar el funcionamiento de las asignaciones anteriores.
+            $grupo = $docente->asignacionesGrupos()
+                ->with(['materia', 'periodo'])
+                ->where('id_asignacion', $asignacion)
+                ->firstOrFail();
+        }
+
+        // Obtener únicamente los alumnos del semestre,
+        // grupo y periodo escolar de la asignación.
         $alumnos = DB::table('alumnos as a')
             ->where('a.semestre', $grupo->semestre)
             ->where('a.grupo', $grupo->grupo)
             ->where(function ($consulta) use ($grupo) {
 
+                // Alumnos inscritos.
                 $consulta->whereExists(
                     function ($subconsulta) use ($grupo) {
                         $subconsulta->selectRaw('1')
@@ -44,6 +114,7 @@ class ListaAsistenciaController
                     }
                 );
 
+                // Alumnos reinscritos.
                 $consulta->orWhereExists(
                     function ($subconsulta) use ($grupo) {
                         $subconsulta->selectRaw('1')
@@ -77,23 +148,25 @@ class ListaAsistenciaController
             $docente->apellido_materno
         ])));
 
-        // Nombre del archivo descargable.
+        // Diferenciar los archivos según el origen.
         $nombreArchivo = 'lista_asistencia_'
+            . $origen . '_'
             . $grupo->id_asignacion . '.csv';
 
-        // Generar el archivo compatible con Excel.
+        // Generar el archivo CSV compatible con Excel.
         return response()->streamDownload(
             function () use (
                 $grupo,
                 $alumnos,
                 $nombreDocente
             ) {
+
                 $salida = fopen('php://output', 'w');
 
-                // Codificación UTF-8 compatible con Excel.
+                // Codificación UTF-8 para Excel.
                 fwrite($salida, "\xEF\xBB\xBF");
 
-                // Función para escribir filas de forma segura.
+                // Escribir filas de manera segura.
                 $escribir = function (array $fila) use ($salida) {
 
                     $fila = array_map(function ($valor) {
@@ -104,7 +177,7 @@ class ListaAsistenciaController
                             (string) ($valor ?? '')
                         );
 
-                        // Evitar fórmulas al abrir el CSV.
+                        // Evitar la ejecución de fórmulas en Excel.
                         if (preg_match('/^\s*[=+\-@]/u', $texto)) {
                             $texto = "'" . $texto;
                         }
@@ -113,7 +186,7 @@ class ListaAsistenciaController
 
                     }, $fila);
 
-                    fputcsv($salida, $fila, ';');
+                    fputcsv($salida, $fila, ';', '"', '');
                 };
 
                 // Encabezado institucional.
@@ -184,7 +257,7 @@ class ListaAsistenciaController
 
                 $escribir($encabezados);
 
-                // Agregar los estudiantes del grupo.
+                // Agregar los alumnos a la lista de asistencia.
                 foreach ($alumnos as $indice => $alumno) {
 
                     $nombre = trim(implode(' ', array_filter([
@@ -200,7 +273,10 @@ class ListaAsistenciaController
                             $nombre
                         ],
                         array_fill(0, 31, ''),
-                        ['', '']
+                        [
+                            '',
+                            ''
+                        ]
                     );
 
                     $escribir($fila);
@@ -209,13 +285,13 @@ class ListaAsistenciaController
                 fclose($salida);
             },
             $nombreArchivo,
-[
-    'Content-Type' => 'text/csv; charset=UTF-8',
-    'Cache-Control' => 'private, no-store, no-cache, must-revalidate',
-    'Pragma' => 'no-cache',
-    'Expires' => '0',
-    'X-Content-Type-Options' => 'nosniff'
-]
+            [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Cache-Control' => 'private, no-store, no-cache, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'X-Content-Type-Options' => 'nosniff'
+            ]
         );
     }
 }
