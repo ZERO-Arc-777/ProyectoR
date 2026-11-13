@@ -209,9 +209,13 @@ class ListaAsistenciaController
                 fclose($salida);
             },
             $nombreArchivo,
-            [
-                'Content-Type' => 'text/csv; charset=UTF-8'
-            ]
+[
+    'Content-Type' => 'text/csv; charset=UTF-8',
+    'Cache-Control' => 'private, no-store, no-cache, must-revalidate',
+    'Pragma' => 'no-cache',
+    'Expires' => '0',
+    'X-Content-Type-Options' => 'nosniff'
+]
         );
     }
 }

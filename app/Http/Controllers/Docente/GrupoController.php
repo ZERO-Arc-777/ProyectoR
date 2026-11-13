@@ -2,24 +2,29 @@
 
 namespace App\Http\Controllers\Docente;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Docente;
+use Illuminate\Support\Facades\Auth;
 
 class GrupoController
 {
     public function index()
     {
-        $asignaciones = collect([
-            (object) [
-                'id_asignacion' => '1001',
-                'semestre'      => 1,
-                'grupo'         => 'A',
-                'materia'       => (object) ['nombre' => 'Cultura Digital I. Ciudadanía digital'],
-                'periodo'       => (object) ['nombre' => 'Febrero - Julio 2026']
-            ]
-        ]);
+        // Identificar al docente autenticado.
+        $docente = Docente::where(
+            'id_usuario',
+            Auth::id()
+        )->firstOrFail();
 
-        return view('docente.grupos', compact('asignaciones'));
+        // Consultar solamente sus grupos asignados.
+        $asignaciones = $docente->asignacionesGrupos()
+            ->with(['materia', 'periodo'])
+            ->orderBy('semestre')
+            ->orderBy('grupo')
+            ->get();
+
+        return view(
+            'docente.grupos',
+            compact('asignaciones')
+        );
     }
 }
