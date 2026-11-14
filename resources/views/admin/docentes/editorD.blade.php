@@ -173,21 +173,25 @@
                     REVISIONES
                 </div>
 
-                <a href="{{ route('admin.revision.inscripciones') }}" class="admin-nav-sub">
+                <a href="{{ route('admin.revision.inscripciones') }}"
+                   class="admin-nav-sub">
                     <i class="bi bi-arrow-return-right me-1"></i> Inscripciones
                 </a>
 
-                <a href="{{ route('admin.revision.reinscripciones') }}" class="admin-nav-sub">
+                <a href="{{ route('admin.revision.reinscripciones') }}"
+                   class="admin-nav-sub">
                     <i class="bi bi-arrow-return-right me-1"></i> Reinscripciones
                 </a>
 
-                <a href="{{ route('admin.revision.egresos') }}" class="admin-nav-sub">
+                <a href="{{ route('admin.revision.egresos') }}"
+                   class="admin-nav-sub">
                     <i class="bi bi-arrow-return-right me-1"></i> Egresos
                 </a>
 
                 <hr class="border-secondary my-3">
 
-                <a href="{{ route('logout') }}" class="admin-nav admin-logout">
+                <a href="{{ route('logout') }}"
+                   class="admin-nav admin-logout">
                     <i class="bi bi-power"></i> Cerrar sesión
                 </a>
 
@@ -207,13 +211,13 @@
                         <i class="bi bi-person-badge-fill me-2"></i>
                         EDITAR EXPEDIENTE DE DOCENTE
                     </h5>
-
                 </div>
 
                 <div class="card-body p-4 p-md-5 form-card">
 
                     {{-- ERRORES DE VALIDACIÓN --}}
                     @if ($errors->any())
+
                         <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
 
                             <div class="d-flex align-items-center mb-2">
@@ -228,6 +232,7 @@
                             </ul>
 
                         </div>
+
                     @endif
 
                     <form action="{{ route('admin.docentes.update', $docente->id_docente) }}"
@@ -257,12 +262,12 @@
                                     <option value="">-- Sin cuenta vinculada --</option>
 
                                     @foreach($usuarios as $user)
+
                                         <option value="{{ $user->id_usuario }}"
                                             {{ old('id_usuario', $docente->id_usuario) == $user->id_usuario ? 'selected' : '' }}>
-
                                             {{ $user->nombre }} ({{ $user->correo }})
-
                                         </option>
+
                                     @endforeach
 
                                 </select>
@@ -417,9 +422,12 @@
                              */
 
                             if (old('materias') !== null) {
+
                                 $materiasFormulario = old('materias');
                                 $gruposFormulario = old('grupos', []);
+
                             } else {
+
                                 $materiasFormulario = $asignacionesActuales
                                     ->pluck('id_materia')
                                     ->toArray();
@@ -429,6 +437,7 @@
                                     ->toArray();
                             }
 
+                            // Garantizar que exista al menos una fila.
                             if (count($materiasFormulario) === 0) {
                                 $materiasFormulario = [''];
                                 $gruposFormulario = ['A'];
@@ -460,9 +469,7 @@
 
                                                     <option value="{{ $materia->id_materia }}"
                                                         {{ $idMateria == $materia->id_materia ? 'selected' : '' }}>
-
                                                         {{ $materia->nombre }} - Semestre {{ $materia->semestre }}
-
                                                     </option>
 
                                                 @endforeach
@@ -533,9 +540,7 @@
 
                             <a href="{{ route('admin.docentes') }}"
                                class="btn btn-outline-dark fw-bold px-4 shadow-sm">
-
                                 Cancelar
-
                             </a>
 
                             <button type="submit"
@@ -564,92 +569,54 @@
 <script>
     $(document).ready(function () {
 
-        // Buscador de cuentas de usuario
+        // Buscador de cuentas de usuario.
         $('#buscador-usuarios').select2({
             placeholder: "-- Escribe el nombre o correo del docente --",
             allowClear: true,
             width: '100%'
         });
 
-        // Agregar una nueva asignación académica
+        // Agregar una nueva asignación académica de manera segura.
         $('#agregar-materia').on('click', function () {
 
-            let nuevaFila = `
-                <div class="materia-row">
+            // Utilizar la fila generada por Laravel Blade.
+            const filaOriginal = $('#contenedor-materias .materia-row').first();
 
-                    <div class="row align-items-end">
+            // Comprobar que exista una fila.
+            if (filaOriginal.length === 0) {
+                return;
+            }
 
-                        <div class="col-md-8 mb-2">
+            // Clonar el HTML ya generado y escapado por Blade.
+            const nuevaFila = filaOriginal.clone(false, false);
 
-                            <label class="fw-bold text-dark mb-1">
-                                Materia
-                            </label>
+            // Limpiar los valores de la nueva asignación.
+            nuevaFila.find('select[name="materias[]"]').val('');
+            nuevaFila.find('input[name="grupos[]"]').val('A');
 
-                            <select name="materias[]"
-                                    class="form-select border-0 shadow-sm">
-
-                                <option value="">
-                                    -- Seleccionar materia --
-                                </option>
-
-                                @foreach($materias as $materia)
-                                    <option value="{{ $materia->id_materia }}">
-                                        {{ $materia->nombre }} - Semestre {{ $materia->semestre }}
-                                    </option>
-                                @endforeach
-
-                            </select>
-
-                        </div>
-
-                        <div class="col-md-3 col-8 mb-2">
-
-                            <label class="fw-bold text-dark mb-1">
-                                Grupo
-                            </label>
-
-                            <input type="text"
-                                   name="grupos[]"
-                                   class="form-control border-0 shadow-sm text-uppercase"
-                                   maxlength="10"
-                                   value="A"
-                                   placeholder="Ej. A">
-
-                        </div>
-
-                        <div class="col-md-1 col-4 mb-2">
-
-                            <button type="button"
-                                    class="btn btn-outline-danger w-100 btn-eliminar-materia"
-                                    title="Eliminar asignación">
-
-                                <i class="bi bi-trash"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-            `;
-
+            // Agregar la nueva fila al formulario.
             $('#contenedor-materias').append(nuevaFila);
 
         });
 
-        // Eliminar una asignación
+        // Eliminar una asignación académica.
         $(document).on('click', '.btn-eliminar-materia', function () {
 
-            if ($('.materia-row').length > 1) {
+            const filaActual = $(this).closest('.materia-row');
 
-                $(this).closest('.materia-row').remove();
+            const totalFilas =
+                $('#contenedor-materias .materia-row').length;
+
+            if (totalFilas > 1) {
+
+                // Eliminar la fila seleccionada.
+                filaActual.remove();
 
             } else {
 
-                // Si solo queda una fila, se limpian sus campos.
-                $(this).closest('.materia-row').find('select').val('');
-                $(this).closest('.materia-row').find('input').val('A');
+                // Si queda una sola fila, limpiar sus campos.
+                filaActual.find('select[name="materias[]"]').val('');
+                filaActual.find('input[name="grupos[]"]').val('A');
 
             }
 
