@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('titulo', 'Panel Docente')
@@ -72,7 +71,7 @@
         width: 66px;
         height: 66px;
         border-radius: 18px;
-        background: rgba(253, 126, 20, 0.15);
+        background: rgba(253, 126, 20, 0.15); 
         color: #fd7e14;
         display: grid;
         place-items: center;
@@ -130,16 +129,6 @@
         color: #212529;
     }
 
-    /* Boton seguro para cerrar sesion */
-    .docente-nav-button {
-        width: 100%;
-        border: none;
-        background: transparent;
-        text-align: left;
-        font: inherit;
-        cursor: pointer;
-    }
-
     .docente-logout {
         color: #ffb3b9;
     }
@@ -153,18 +142,16 @@
 <div class="container-fluid docente-panel">
     <div class="row min-vh-100">
 
-        <!-- MENU LATERAL -->
+        <!-- MENÚ LATERAL -->
         <aside class="col-12 col-md-3 col-lg-2 docente-sidebar p-4">
 
             <div class="text-center mb-4">
                 <div class="mb-2">
                     <i class="bi bi-mortarboard-fill fs-2 text-white"></i>
                 </div>
-
                 <h5 class="docente-sidebar-title mb-1">
                     PANEL DOCENTE
                 </h5>
-
                 <small class="docente-muted">
                     Gestión Académica
                 </small>
@@ -183,40 +170,33 @@
                 </a>
 
                 <a href="{{ route('docente.materias') }}"
-                   class="docente-nav">
+   class="docente-nav">
                     <i class="bi bi-journal-bookmark-fill"></i>
                     Mis Materias
                 </a>
 
                 <a href="{{ route('docente.grupos') }}"
-                   class="docente-nav">
+   class="docente-nav">
                     <i class="bi bi-people-fill"></i>
                     Mis Grupos
                 </a>
 
                 <a href="{{ route('docente.perfil') }}"
-                   class="docente-nav">
+   class="docente-nav">
                     <i class="bi bi-person-badge-fill"></i>
                     Mi Perfil
                 </a>
 
                 <hr class="border-secondary my-3">
 
-                <!-- CERRAR SESION SEGURO -->
-                <form action="{{ route('logout.seguro') }}"
-                      method="POST"
-                      class="m-0">
-
-                    @csrf
-
-                    <button type="submit"
-                            class="docente-nav docente-logout docente-nav-button">
-                        <i class="bi bi-box-arrow-right"></i>
-                        Cerrar sesión
-                    </button>
-                </form>
+                <a href="{{ route('logout') }}"
+                   class="docente-nav docente-logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Cerrar sesión
+                </a>
 
             </nav>
+
         </aside>
 
         <!-- CONTENIDO PRINCIPAL -->
@@ -230,7 +210,6 @@
                     <h2 class="fw-bold mb-1">
                         Panel de Docente
                     </h2>
-
                     <p class="docente-muted mb-0">
                         Sistema de Gestión Administrativa Escolar
                     </p>
@@ -271,12 +250,11 @@
                 </div>
             </section>
 
-            <!-- ACCESOS RAPIDOS -->
+            <!-- ACCESOS RÁPIDOS -->
             <div class="mb-4">
                 <h4 class="fw-bold mb-1">
                     Accesos rápidos
                 </h4>
-
                 <p class="docente-muted mb-0">
                     Explora las secciones de tu panel.
                 </p>
@@ -358,10 +336,10 @@
 
             </div>
 
-            <!-- INFORMACION GENERAL -->
+            <!-- INFORMACIÓN GENERAL -->
             <section class="docente-info p-4 mt-5">
-                <div class="d-flex align-items-start gap-3">
 
+                <div class="d-flex align-items-start gap-3">
                     <div class="docente-card-icon flex-shrink-0">
                         <i class="bi bi-info-circle-fill"></i>
                     </div>
@@ -380,11 +358,12 @@
                             conforme avancemos en su desarrollo.
                         </p>
                     </div>
-
                 </div>
+
             </section>
 
         </main>
+
     </div>
 </div>
 

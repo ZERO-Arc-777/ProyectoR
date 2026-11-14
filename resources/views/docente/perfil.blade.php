@@ -268,22 +268,12 @@
 
                 <hr class="border-secondary my-3">
 
-                <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" style="margin: 0;">
-    @csrf
-
-    <button type="submit"
-            class="perfil-nav text-danger"
-            style="width: 100%;
-                   border: none;
-                   background: transparent;
-                   text-align: left;
-                   cursor: pointer;
-                   font: inherit;">
-        <i class="bi bi-box-arrow-right"></i>
-        Cerrar sesión
-    </button>
-</form>
+                <!-- CERRAR SESIÓN -->
+                <a href="{{ route('logout') }}"
+                   class="perfil-nav text-danger">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Cerrar sesión
+                </a>
 
             </nav>
 

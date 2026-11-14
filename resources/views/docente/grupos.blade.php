@@ -15,12 +15,12 @@
 <style>
     .grupos-panel {
         min-height: 100vh;
-        background-color: #f4f6f9;
+        background-color: #f4f6f9; 
         color: #212529;
     }
 
     .grupos-sidebar {
-        background: #212529;
+        background: #212529; 
         border-right: 1px solid #343a40;
     }
 
@@ -69,7 +69,7 @@
     .grupos-resumen-icon {
         width: 56px;
         height: 56px;
-        background: #212529;
+        background: #212529; 
         color: #fd7e14;
         border-radius: 15px;
         display: grid;
@@ -89,7 +89,7 @@
 
     .grupos-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         border-color: #fd7e14;
     }
 
@@ -156,38 +156,6 @@
         padding: 25px;
         color: #212529;
     }
-
-    /* BOTÓN DE DESCARGA */
-    .grupos-btn-descargar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-        padding: 14px 18px;
-        margin-top: 25px;
-        border-radius: 12px;
-        background: #212529;
-        color: #ffffff;
-        text-decoration: none;
-        font-weight: 600;
-        transition: background .2s, transform .2s;
-    }
-
-    .grupos-btn-descargar:hover {
-        background: #fd7e14;
-        color: #ffffff;
-        transform: translateY(-2px);
-    }
-
-    .grupos-btn-descargar:focus-visible {
-        outline: 3px solid #fd7e14;
-        outline-offset: 3px;
-    }
-
-    .grupos-btn-descargar i {
-        font-size: 1.2rem;
-    }
 </style>
 
 <div class="container-fluid grupos-panel">
@@ -247,28 +215,12 @@
 
                 <hr class="border-secondary my-3">
 
-                <!-- CERRAR SESIÓN SEGURO -->
-                <form action="{{ route('logout.seguro') }}"
-                      method="POST"
-                      style="margin: 0;">
-
-                    @csrf
-
-                    <button type="submit"
-                            class="grupos-nav text-danger"
-                            style="width: 100%;
-                                   border: none;
-                                   background: transparent;
-                                   text-align: left;
-                                   cursor: pointer;
-                                   font: inherit;">
-
-                        <i class="bi bi-box-arrow-right"></i>
-                        Cerrar sesión
-
-                    </button>
-
-                </form>
+                <!-- CERRAR SESIÓN -->
+                <a href="{{ route('logout') }}"
+                   class="grupos-nav text-danger">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Cerrar sesión
+                </a>
 
             </nav>
 
@@ -292,7 +244,7 @@
 
             </div>
 
-            <!-- ENCABEZADO -->
+            <!-- ENCABEZADO MORADO -->
             <section class="grupos-heading mb-4">
 
                 <div class="d-flex flex-wrap align-items-center gap-3">
@@ -300,7 +252,6 @@
                     <i class="bi bi-people-fill fs-1"></i>
 
                     <div>
-
                         <h4 class="fw-bold mb-2">
                             Gestión de Grupos
                         </h4>
@@ -308,7 +259,6 @@
                         <p class="mb-0 text-white-50">
                             Escuela Preparatoria Número 5 del Estado
                         </p>
-
                     </div>
 
                 </div>
@@ -325,7 +275,6 @@
                     </div>
 
                     <div>
-
                         <p class="grupos-muted mb-1">
                             Total de asignaciones de grupos
                         </p>
@@ -333,7 +282,6 @@
                         <h3 class="fw-bold mb-0">
                             {{ $asignaciones->count() }}
                         </h3>
-
                     </div>
 
                 </div>
@@ -343,12 +291,9 @@
             <!-- GRUPOS ASIGNADOS -->
             <section aria-labelledby="titulo-grupos">
 
-                <h4 class="fw-bold mb-4"
-                    id="titulo-grupos">
-
+                <h4 class="fw-bold mb-4" id="titulo-grupos">
                     <i class="bi bi-collection-fill me-2"></i>
                     Mis grupos asignados
-
                 </h4>
 
                 <div class="row g-4">
@@ -387,54 +332,33 @@
 
                                 <!-- MATERIA -->
                                 <div class="grupos-detalle">
-
                                     <i class="bi bi-book-half"></i>
 
                                     <span>
                                         {{ $asignacion->materia?->nombre
                                            ?? 'Materia no disponible' }}
                                     </span>
-
                                 </div>
 
                                 <!-- PERIODO ESCOLAR -->
                                 <div class="grupos-detalle">
-
                                     <i class="bi bi-calendar3"></i>
 
                                     <span>
                                         {{ $asignacion->periodo?->nombre
                                            ?? 'Periodo no disponible' }}
                                     </span>
-
                                 </div>
 
                                 <!-- IDENTIFICADOR -->
                                 <div class="grupos-detalle">
-
                                     <i class="bi bi-hash"></i>
 
                                     <span>
                                         Asignación
                                         #{{ $asignacion->id_asignacion }}
                                     </span>
-
                                 </div>
-
-                                <!-- DESCARGAR LISTA DE ASISTENCIA -->
-                                <a href="{{ route('docente.lista-asistencia', [
-                                    'asignacion' => $asignacion->id_asignacion,
-                                    'origen' => $asignacion->origen
-                                ]) }}"
-                                   class="grupos-btn-descargar">
-
-                                    <i class="bi bi-file-earmark-arrow-down"></i>
-
-                                    <span>
-                                        Descargar lista de asistencia
-                                    </span>
-
-                                </a>
 
                             </article>
 
@@ -457,11 +381,9 @@
 
                                 <p class="grupos-muted mx-auto mb-0"
                                    style="max-width: 530px;">
-
                                     Cuando se registren grupos a tu nombre,
                                     podrás consultarlos aquí junto con
                                     su semestre, materia y periodo escolar.
-
                                 </p>
 
                             </div>
@@ -490,13 +412,10 @@
                         </h5>
 
                         <p class="grupos-muted mb-0">
-
                             Aquí se muestran las asignaciones académicas
                             asociadas a tu cuenta docente.
-
                             Si necesitas modificar tus grupos,
                             comunícate con el área administrativa.
-
                         </p>
 
                     </div>

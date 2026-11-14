@@ -10,8 +10,7 @@ class PerfilController
 {
     public function index()
     {
-$docente = Docente::where('id_usuario', Auth::id())->firstOrFail();
-
+        $docente = Docente::where('id_usuario', Auth::id())->first();
         
         return view('docente.perfil', compact('docente'));
     }

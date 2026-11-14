@@ -28,10 +28,6 @@ Route::post('/login', [AuthController::class, 'iniciarSesion'])->name('login.pos
 
 Route::get('/logout', [AuthController::class, 'cerrarSesion'])->name('logout');
 
-Route::post('/logout', [AuthController::class, 'cerrarSesion'])
-    ->name('logout.seguro');
-
-
 
 Route::middleware(['auth', 'role:1'])->prefix('admin')->group(function () {
 
