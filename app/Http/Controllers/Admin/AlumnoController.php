@@ -13,7 +13,7 @@ class AlumnoController
     {
         $buscar = $request->get('buscar');
 
-        $alumnos = \App\Models\Alumno::query()
+        $alumnos = Alumno::with('usuario')
             ->when($buscar, function ($query, $buscar) {
                 return $query->where('matricula', 'LIKE', "%{$buscar}%")
                              ->orWhere('nombres', 'LIKE', "%{$buscar}%")
@@ -28,9 +28,9 @@ class AlumnoController
 
     public function create()
     {
-        $usuariosOcupados = \App\Models\Alumno::whereNotNull('id_usuario')->pluck('id_usuario')->toArray();
+        $usuariosOcupados = Alumno::whereNotNull('id_usuario')->pluck('id_usuario')->toArray();
         
-        $usuarios = \App\Models\User::where('id_rol', 3)
+        $usuarios = User::where('id_rol', 3)
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
         
@@ -42,7 +42,7 @@ class AlumnoController
         $request->validate([
             'id_usuario'       => 'required|exists:usuarios,id_usuario|unique:alumnos,id_usuario',
             'matricula'        => 'required|string|unique:alumnos,matricula',
-            'nombres'           => 'required|string|max:100',
+            'nombres'          => 'required|string|max:100',
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',
             'curp'             => 'required|string|size:18|unique:alumnos,curp',
@@ -50,20 +50,30 @@ class AlumnoController
             'grupo'            => 'required|string|in:A,B'
         ]);
 
-        Alumno::create($request->all());
+        Alumno::create([
+            'id_usuario'       => $request->id_usuario,
+            'matricula'        => $request->matricula,
+            'nombres'          => $request->nombres,
+            'apellido_paterno' => $request->apellido_paterno,
+            'apellido_materno' => $request->apellido_materno,
+            'curp'             => $request->curp,
+            'semestre'         => $request->semestre,
+            'grupo'            => $request->grupo,
+            'estado'           => 'ACTIVO'
+        ]);
 
         return redirect()->route('admin.alumnos')->with('success', 'Expediente de alumno creado correctamente.');
     }
 
     public function edit($id)
     {
-        $alumno = \App\Models\Alumno::where('matricula', $id)->firstOrFail(); 
+        $alumno = Alumno::where('matricula', $id)->firstOrFail(); 
         
-        $usuariosOcupados = \App\Models\Alumno::whereNotNull('id_usuario')
+        $usuariosOcupados = Alumno::whereNotNull('id_usuario')
             ->where('matricula', '!=', $id)
             ->pluck('id_usuario')->toArray();
 
-        $usuarios = \App\Models\User::where('id_rol', 3)
+        $usuarios = User::where('id_rol', 3)
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
 
@@ -72,15 +82,27 @@ class AlumnoController
 
     public function update(Request $request, $id)
     {
-        $alumno = \App\Models\Alumno::where('matricula', $id)->firstOrFail();
+        $alumno = Alumno::where('matricula', $id)->firstOrFail();
 
-        $alumno->id_usuario = $request->id_usuario;
-        $alumno->curp = $request->curp;
-        $alumno->nombres = $request->nombres;
+        $request->validate([
+            'id_usuario'       => 'required|exists:usuarios,id_usuario|unique:alumnos,id_usuario,' . $alumno->id_alumno . ',id_alumno',
+            'matricula'        => 'required|string|unique:alumnos,matricula,' . $alumno->id_alumno . ',id_alumno',
+            'nombres'          => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
+            'curp'             => 'required|string|size:18|unique:alumnos,curp,' . $alumno->id_alumno . ',id_alumno',
+            'semestre'         => 'required|integer|in:1,3,5',
+            'grupo'            => 'required|string|in:A,B'
+        ]);
+
+        $alumno->id_usuario       = $request->id_usuario;
+        $alumno->matricula        = $request->matricula;
+        $alumno->curp             = $request->curp;
+        $alumno->nombres          = $request->nombres;
         $alumno->apellido_paterno = $request->apellido_paterno;
         $alumno->apellido_materno = $request->apellido_materno;
-        $alumno->semestre = $request->semestre;
-        $alumno->grupo = $request->grupo;
+        $alumno->semestre         = $request->semestre;
+        $alumno->grupo            = $request->grupo;
         
         $alumno->save();
 

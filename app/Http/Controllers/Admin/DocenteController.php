@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Docente;
 use App\Models\User;
-use App\Models\MateriaA;
+use App\Models\Materia;
 use App\Models\AsignacionAcademica;
 use App\Models\Configuracion;
 
@@ -36,7 +36,7 @@ class DocenteController
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
         
-        $materias = MateriaA::where('estado', 'ACTIVA')->get();
+        $materias = Materia::where('estado', 'ACTIVA')->get();
         
         return view('admin.docentes.create', compact('usuarios', 'materias'));
     }
@@ -84,8 +84,7 @@ class DocenteController
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
 
-        // 4. Cargamos las materias activas y las asignaciones que ya tiene este docente en el periodo actual
-        $materias = MateriaA::where('estado', 'ACTIVA')->get();
+        $materias = Materia::where('estado', 'ACTIVA')->get();
         $periodoActual = Configuracion::where('clave', 'periodo_actual')->first()->valor ?? 'No definido';
         
         $asignacionesActuales = AsignacionAcademica::where('id_docente', $docente->id_docente)

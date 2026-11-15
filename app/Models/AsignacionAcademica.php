@@ -15,4 +15,14 @@ class AsignacionAcademica extends Model
         'grupo', 
         'periodo'
     ];
+
+    public function materia()
+    {
+        return $this->belongsTo(Materia::class, 'id_materia', 'id_materia');
+    }
+
+    public function docente()
+    {
+        return $this->belongsTo(Docente::class, 'id_docente', 'id_docente');
+    }
 }

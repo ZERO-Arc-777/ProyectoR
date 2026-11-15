@@ -115,10 +115,10 @@
                     <i class="bi bi-person-workspace"></i> Docentes
                 </a>
                 <a href="{{ route('admin.materias') }}" class="admin-nav">
-                    <i class="bi bi-journal-text"></i> Materias / Asig.
+                    <i class="bi bi-journal-text"></i> Materias
                 </a>
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
-                    <i class="bi bi-cash-coin"></i> Seg. de Pagos
+                    <i class="bi bi-cash-coin"></i> Pagos
                 </a>
 
                 <div class="mt-2 mb-1 ps-3 text-white-50 small fw-bold" style="letter-spacing: 0.5px;">REVISIONES</div>
@@ -143,7 +143,7 @@
 
         <main class="col-12 col-md-9 col-lg-10 p-4 p-lg-5">
 
-            <div class="card shadow-sm border-0 rounded-4 w-100" style="max-width: 750px; background-color: #d1d5d6;">
+            <div class="card shadow-sm border-0 rounded-4 w-100 mx-auto" style="max-width: 750px; background-color: #d1d5d6;">
                 <div class="card-header bg-dark text-white text-center py-3" style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-person-plus-fill me-2"></i>NUEVO EXPEDIENTE DE ALUMNO</h5>
                 </div>
@@ -178,6 +178,11 @@
                                         </option>
                                     @endforeach
                                 </select>
+                            </div>
+
+                            <div class="col-12 mb-3 text-start">
+                                <label class="fw-bold text-dark mb-1 ms-1">Matrícula</label>
+                                <input type="text" name="matricula" class="form-control border-0 shadow-sm fw-bold" value="{{ old('matricula') }}" required>
                             </div>
 
                             <div class="col-12 mb-3 text-start">

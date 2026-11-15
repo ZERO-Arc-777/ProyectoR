@@ -17,6 +17,7 @@
         background-color: #f4f6f9; 
     }
 
+    /* MENÚ LATERAL */
     .admin-sidebar {
         background: #212529;
         border-right: 1px solid #343a40;
@@ -59,17 +60,72 @@
         transition: color .2s;
     }
 
-    .admin-nav-sub:hover { color: #ffffff; }
+    .admin-nav-sub:hover {
+        color: #ffffff;
+    }
+
     .admin-nav i { font-size: 1.15rem; }
 
-    .admin-card-content {
+    /* ENCABEZADO Y TARJETAS */
+    .admin-welcome {
+        background: #212529;
+        border-radius: 20px;
+        padding: 32px;
+        color: #ffffff;
+    }
+
+    .admin-welcome-icon {
+        width: 66px;
+        height: 66px;
+        border-radius: 18px;
+        background: rgba(25, 135, 84, 0.15); 
+        color: #198754; 
+        display: grid;
+        place-items: center;
+        font-size: 2rem;
+    }
+
+    .admin-card {
         background: #d1d5d6;
         border: 1px solid #c0c4c5;
         border-radius: 18px;
+        height: 100%;
+        color: #212529;
+        text-decoration: none;
+        transition: transform .2s, box-shadow .2s, border-color .2s;
+        display: block;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-color: #198754; 
+        color: #212529;
+    }
+
+    .admin-card-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: #212529;
+        color: #198754; 
+        font-size: 1.5rem;
     }
 
     .admin-muted { color: #6c757d; }
-    
+
+    .admin-status {
+        display: inline-block;
+        background: rgba(25, 135, 84, .15);
+        color: #198754;
+        border-radius: 30px;
+        padding: 6px 12px;
+        font-size: .78rem;
+        font-weight: 600;
+    }
+
     .admin-logout { color: #ffb3b9; }
     .admin-logout:hover { color: #ffffff; background: rgba(220, 53, 69, .22); }
 </style>
@@ -108,11 +164,11 @@
                 </a>
 
                 <a href="{{ route('admin.materias') }}" class="admin-nav">
-                    <i class="bi bi-journal-text"></i> Materias / Asig.
+                    <i class="bi bi-journal-text"></i> Materias
                 </a>
-
-                <a href="{{ route('admin.pagos') }}" class="admin-nav active" aria-current="page">
-                    <i class="bi bi-cash-coin"></i> Seg. de Pagos
+                
+                <a href="{{ route('admin.pagos') }}" class="admin-nav">
+                    <i class="bi bi-cash-coin"></i> Pagos
                 </a>
 
                 <div class="mt-2 mb-1 ps-3 text-white-50 small fw-bold" style="letter-spacing: 0.5px;">REVISIONES</div>

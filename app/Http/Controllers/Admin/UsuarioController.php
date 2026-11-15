@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Rol;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UsuarioController
 {
@@ -12,7 +13,7 @@ class UsuarioController
     {
         $buscar = $request->get('buscar');
 
-        $usuarios = User::query()
+        $usuarios = User::with('rol')
             ->when($buscar, function ($query, $buscar) {
                 return $query->where('nombre', 'LIKE', "%{$buscar}%")
                              ->orWhere('correo', 'LIKE', "%{$buscar}%");
@@ -52,21 +53,28 @@ class UsuarioController
     public function edit($id)
     {
         $usuario = User::findOrFail($id); 
-        $roles = \App\Models\Rol::all(); 
+        $roles = Rol::all(); 
 
         return view('admin.usuarios.editorU', compact('usuario', 'roles'));
     }
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'nombre'     => 'required|string|max:255',
+            'correo'     => 'required|email|unique:usuarios,correo,' . $id . ',id_usuario',
+            'id_rol'     => 'required|exists:roles,id_rol',
+            'contrasena' => 'nullable|min:6' 
+        ]);
+
         $usuario = User::findOrFail($id);
 
         $usuario->nombre = $request->nombre; 
         $usuario->correo = $request->correo; 
         $usuario->id_rol = $request->id_rol;
 
-        if ($request->filled('password')) {
-            $usuario->contrasena = bcrypt($request->password);
+        if ($request->filled('contrasena')) {
+            $usuario->contrasena = Hash::make($request->contrasena);
         }
 
         if ($request->has('estado')) {

@@ -108,11 +108,11 @@
                 </a>
 
                 <a href="{{ route('admin.materias') }}" class="admin-nav">
-                    <i class="bi bi-journal-text"></i> Materias / Asig.
+                    <i class="bi bi-journal-text"></i> Materias
                 </a>
-
+                
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
-                    <i class="bi bi-cash-coin"></i> Seg. de Pagos
+                    <i class="bi bi-cash-coin"></i> Pagos
                 </a>
 
                 <div class="mt-2 mb-1 ps-3 text-white-50 small fw-bold" style="letter-spacing: 0.5px;">REVISIONES</div>
@@ -189,7 +189,7 @@
                                         <i class="bi bi-person-badge text-muted me-1"></i> {{ $docente->numero_empleado }}
                                     </td>
                                     <td class="fw-bold text-secondary">{{ $docente->apellido_paterno }} {{ $docente->apellido_materno }} {{ $docente->nombres }}</td>
-                                    <td class="text-muted">{{ $docente->curp }}</td>
+                                    <td class="text-muted text-uppercase">{{ $docente->curp }}</td>
                                     <td class="text-center">
                                         @if($docente->estado == 'ACTIVO')
                                             <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Activo</span>

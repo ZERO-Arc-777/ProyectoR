@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Docente extends Model
 {
     protected $table = 'docentes';
-
     protected $primaryKey = 'id_docente';
 
     protected $fillable = [
@@ -21,34 +20,20 @@ class Docente extends Model
         'estado'
     ];
 
-    // Relación con el usuario
     public function usuario()
     {
-        return $this->belongsTo(
-            User::class,
-            'id_usuario',
-            'id_usuario'
-        );
+        return $this->belongsTo(User::class, 'id_usuario', 'id_usuario');
     }
 
-    // Relación con las materias asignadas
+    public function asignacionesAcademicas()
+    {
+        return $this->hasMany(AsignacionAcademica::class, 'id_docente', 'id_docente');
+    }
+
     public function materias()
     {
-        return $this->belongsToMany(
-            Materia::class,
-            'docente_materia',
-            'id_docente',
-            'id_materia'
-        );
-    }
-
-    // Relación con los grupos asignados
-    public function asignacionesGrupos()
-    {
-        return $this->hasMany(
-            AsignacionGrupo::class,
-            'id_docente',
-            'id_docente'
-        );
+        return $this->belongsToMany(Materia::class, 'asignaciones_academicas', 'id_docente', 'id_materia')
+                    ->withPivot('grupo', 'periodo')
+                    ->withTimestamps();
     }
 }

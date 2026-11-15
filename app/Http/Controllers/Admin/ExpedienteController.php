@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Documento;
 
-class ExpedienteController
+class ExpedienteController 
 {
     public function inscripciones(Request $request)
     {
@@ -52,6 +52,7 @@ class ExpedienteController
         ]);
 
         $documento = Documento::findOrFail($id_documento);
+        
         $documento->update([
             'estado_validacion' => $request->estado_validacion,
             'observaciones'     => $request->observaciones

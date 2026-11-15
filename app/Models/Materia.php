@@ -7,25 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 class Materia extends Model
 {
     protected $table = 'materias';
-
     protected $primaryKey = 'id_materia';
-
     public $timestamps = false;
-
+    
     protected $fillable = [
         'nombre',
         'semestre',
         'estado',
     ];
     
-public function docentes()
-{
-    return $this->belongsToMany(
-        Docente::class,
-        'docente_materia',
-        'id_materia',
-        'id_docente'
-    );
-}
-
+    public function docentesAsignados()
+    {
+        return $this->belongsToMany(Docente::class, 'asignaciones_academicas', 'id_materia', 'id_docente')
+                    ->withPivot('grupo', 'periodo')
+                    ->withTimestamps();
+    }
 }

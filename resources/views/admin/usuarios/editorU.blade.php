@@ -95,10 +95,10 @@
                     <i class="bi bi-person-workspace"></i> Docentes
                 </a>
                 <a href="{{ route('admin.materias') }}" class="admin-nav">
-                    <i class="bi bi-journal-text"></i> Materias / Asig.
+                    <i class="bi bi-journal-text"></i> Materias
                 </a>
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
-                    <i class="bi bi-cash-coin"></i> Seg. de Pagos
+                    <i class="bi bi-cash-coin"></i> Pagos
                 </a>
 
                 <div class="mt-2 mb-1 ps-3 text-white-50 small fw-bold" style="letter-spacing: 0.5px;">REVISIONES</div>
@@ -123,7 +123,7 @@
 
         <main class="col-12 col-md-9 col-lg-10 p-4 p-lg-5">
 
-            <div class="card shadow-sm border-0 rounded-4 w-100" style="max-width: 750px; background-color: #d1d5d6;">
+            <div class="card shadow-sm border-0 rounded-4 w-100 mx-auto" style="max-width: 750px; background-color: #d1d5d6;">
                 <div class="card-header bg-dark text-white text-center py-3" style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-person-gear me-2"></i>EDITAR USUARIO</h5>
                 </div>

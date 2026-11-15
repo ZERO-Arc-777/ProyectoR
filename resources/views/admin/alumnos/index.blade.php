@@ -109,11 +109,11 @@
                 </a>
 
                 <a href="{{ route('admin.materias') }}" class="admin-nav">
-                    <i class="bi bi-journal-text"></i> Materias / Asig.
+                    <i class="bi bi-journal-text"></i> Materias
                 </a>
-
+                
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
-                    <i class="bi bi-cash-coin"></i> Seg. de Pagos
+                    <i class="bi bi-cash-coin"></i> Pagos
                 </a>
 
                 <div class="mt-2 mb-1 ps-3 text-white-50 small fw-bold" style="letter-spacing: 0.5px;">REVISIONES</div>
@@ -188,7 +188,7 @@
                                 <tr>
                                     <td class="fw-bold text-dark ps-4">{{ $alumno->matricula }}</td>
                                     <td class="fw-bold text-secondary">{{ $alumno->apellido_paterno }} {{ $alumno->apellido_materno }} {{ $alumno->nombres }}</td>
-                                    <td class="text-muted">{{ $alumno->curp }}</td>
+                                    <td class="text-muted text-uppercase">{{ $alumno->curp }}</td>
                                     <td class="text-center">
                                         <span class="badge bg-light text-dark border border-secondary px-3 py-2 rounded-pill">
                                             {{ $alumno->semestre }}° "{{ $alumno->grupo }}"

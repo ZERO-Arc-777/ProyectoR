@@ -1,8 +1,9 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+
+// ADMIN
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\AlumnoController;
 use App\Http\Controllers\Admin\DocenteController;
@@ -10,13 +11,16 @@ use App\Http\Controllers\Admin\MateriaController;
 use App\Http\Controllers\Admin\PagoController;
 use App\Http\Controllers\Admin\ExpedienteController;
 
+// ALUMNO
 use App\Http\Controllers\Alumno\DocumentoController;
 use App\Http\Controllers\Alumno\MateriaAController;
 use App\Http\Controllers\Alumno\SolicitudController as AlumnoSolicitudController;
 
+// DOCENTE
 use App\Http\Controllers\Docente\MateriaDController;
 use App\Http\Controllers\Docente\GrupoController;
 use App\Http\Controllers\Docente\PerfilController;
+use App\Http\Controllers\Docente\ListaAsistenciaController;
 
 Route::get('/', [AuthController::class, 'mostrarRoles'])->name('roles');
 
@@ -25,10 +29,9 @@ Route::get('/login', function () {
 })->name('login');
 
 Route::post('/login', [AuthController::class, 'iniciarSesion'])->name('login.post');
-
 Route::get('/logout', [AuthController::class, 'cerrarSesion'])->name('logout');
 
-
+// MÓDULO ADMINISTRADOR (Rol: 1)
 Route::middleware(['auth', 'role:1'])->prefix('admin')->group(function () {
 
     Route::get('/', function () {
@@ -70,6 +73,7 @@ Route::middleware(['auth', 'role:1'])->prefix('admin')->group(function () {
 
 });
 
+// MÓDULO ALUMNO (Rol: 3)
 Route::middleware(['auth', 'role:3'])->prefix('alumno')->group(function () {
 
     Route::get('/', function () {
@@ -87,6 +91,7 @@ Route::middleware(['auth', 'role:3'])->prefix('alumno')->group(function () {
 
 });
 
+// MÓDULO DOCENTE (Rol: 2)
 Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
 
     Route::get('/', function () {
@@ -94,17 +99,18 @@ Route::middleware(['auth', 'role:2'])->prefix('docente')->group(function () {
     })->name('docente.dashboard');
 
     Route::get('/materias', [MateriaDController::class, 'index'])->name('docente.materias');
+    
+    // Integración de las nuevas rutas de calificación
+    Route::get('/materias/{asignacion}/calificar', [MateriaDController::class, 'calificar'])->name('docente.materias.calificar');
+    Route::post('/materias/{asignacion}/calificar', [MateriaDController::class, 'guardarCalificaciones'])->name('docente.materias.guardar');
+
     Route::get('/grupos', [GrupoController::class, 'index'])->name('docente.grupos');
+    Route::get('/grupos/{asignacion}/alumnos', [GrupoController::class, 'verAlumnos'])->name('docente.grupos.listas');
+
     Route::get('/perfil', [PerfilController::class, 'index'])->name('docente.perfil');
 
+    // Ruta de asistencia integrada correctamente al entorno de seguridad del grupo
+    Route::get('/lista-asistencia/{asignacion}', [ListaAsistenciaController::class, 'descargar'])
+        ->whereNumber('asignacion')
+        ->name('docente.lista-asistencia');
 });
-
-
-// DESCARGA DE LISTAS DE ASISTENCIA DEL DOCENTE
-Route::get(
-    '/docente/lista-asistencia/{asignacion}',
-    [\App\Http\Controllers\Docente\ListaAsistenciaController::class, 'descargar']
-)
-->middleware(['auth', 'role:2'])
-->whereNumber('asignacion')
-->name('docente.lista-asistencia');

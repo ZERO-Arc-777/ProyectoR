@@ -18,7 +18,6 @@ class AsignacionGrupo extends Model
         'id_periodo',
     ];
 
-    // Relación con el docente responsable
     public function docente()
     {
         return $this->belongsTo(
@@ -28,7 +27,6 @@ class AsignacionGrupo extends Model
         );
     }
 
-    // Relación con la materia asignada
     public function materia()
     {
         return $this->belongsTo(

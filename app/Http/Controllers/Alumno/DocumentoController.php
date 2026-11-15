@@ -14,7 +14,6 @@ class DocumentoController
     {
         $alumno = Alumno::where('id_usuario', Auth::id())->firstOrFail();
         
-        // Obtenemos los documentos ordenados por fecha
         $documentos = Documento::where('id_alumno', $alumno->id_alumno)
                                ->orderBy('created_at', 'desc')
                                ->get();

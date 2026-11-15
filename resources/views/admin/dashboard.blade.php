@@ -169,7 +169,7 @@
                 </a>
 
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
-                    <i class="bi bi-cash-coin"></i> Seg. de Pagos
+                    <i class="bi bi-cash-coin"></i> Pagos
                 </a>
 
                 <div class="mt-2 mb-1 ps-3 text-white-50 small fw-bold" style="letter-spacing: 0.5px;">REVISIONES</div>

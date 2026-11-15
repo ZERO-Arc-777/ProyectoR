@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\MateriaA;
+use App\Models\Materia; 
 use Illuminate\Http\Request;
 
 class MateriaController
@@ -12,7 +11,7 @@ class MateriaController
     {
         $buscar = $request->input('buscar');
         
-        $materias = MateriaA::when($buscar, function($query, $buscar) {
+        $materias = Materia::when($buscar, function($query, $buscar) {
             return $query->where('nombre', 'LIKE', "%{$buscar}%");
         })->orderBy('semestre', 'asc')->paginate(10);
 
@@ -31,13 +30,7 @@ class MateriaController
             'semestre' => 'required|integer|min:1|max:6',
         ]);
 
-        dd([
-        'nombre' => strtoupper($request->nombre),
-        'semestre' => $request->semestre,
-        'estado' => 'ACTIVA'
-        ]);
-
-        MateriaA::create([
+        Materia::create([
             'nombre' => strtoupper($request->nombre),
             'semestre' => $request->semestre,
             'estado' => 'ACTIVA'
@@ -48,7 +41,7 @@ class MateriaController
 
     public function edit($id_materia)
     {
-        $materia = MateriaA::findOrFail($id_materia);
+        $materia = Materia::findOrFail($id_materia);
         return view('admin.materias.editorM', compact('materia'));
     }
 
@@ -60,7 +53,7 @@ class MateriaController
             'estado' => 'required|in:ACTIVA,INACTIVA'
         ]);
 
-        $materia = MateriaA::findOrFail($id_materia);
+        $materia = Materia::findOrFail($id_materia);
         
         $materia->update([
             'nombre' => strtoupper($request->nombre),
