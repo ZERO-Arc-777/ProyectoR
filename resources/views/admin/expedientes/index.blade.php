@@ -136,9 +136,26 @@
 
                 <hr class="border-secondary my-3">
 
-                <a href="{{ route('logout') }}" class="admin-nav admin-logout">
-                    <i class="bi bi-power"></i> Cerrar sesión
-                </a>
+                <!-- CERRAR SESIÓN SEGURO -->
+<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+    @csrf
+
+    <button type="submit"
+            class="admin-nav admin-logout"
+            style="background: none;
+                   border: none;
+                   cursor: pointer;
+                   width: 100%;
+                   text-align: left;
+                   font: inherit;
+                   display: flex;
+                   align-items: center;
+                   gap: 12px;
+                   white-space: nowrap;">
+        <i class="bi bi-power"></i>
+        <span>Cerrar sesión</span>
+    </button>
+</form>
 
             </nav>
         </aside>
@@ -195,7 +212,7 @@
                                     </td>
                                     <td>
                                         <span class="d-block fw-bold text-dark mb-2">{{ $doc->tipo_documento }}</span>
-                                        <a href="{{ asset('storage/' . $doc->ruta_archivo) }}" target="_blank" class="btn btn-sm btn-outline-dark fw-bold rounded-pill px-3">
+                                        <a href="{{ route('documentos.ver', ['id_documento' => $doc->id_documento]) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-dark fw-bold rounded-pill px-3">
                                             <i class="bi bi-file-earmark-pdf-fill me-1 text-danger"></i> Ver PDF
                                         </a>
                                     </td>

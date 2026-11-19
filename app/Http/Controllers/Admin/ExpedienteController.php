@@ -46,16 +46,25 @@ class ExpedienteController
 
     public function updateEstado(Request $request, $id_documento)
     {
-        $request->validate([
-            'estado_validacion' => 'required|in:PENDIENTE,APROBADO,RECHAZADO',
-            'observaciones'     => 'nullable|string'
-        ]);
+        $datos = $request->validate([
+    'estado_validacion' => [
+        'required',
+        'in:PENDIENTE,APROBADO,RECHAZADO',
+    ],
+    'observaciones' => [
+        'nullable',
+        'string',
+        'max:5000',
+    ],
+], [
+    'estado_validacion.required' => 'Debes seleccionar un estado de validación.',
+    'estado_validacion.in' => 'El estado seleccionado no es válido.',
+    'observaciones.string' => 'Las observaciones deben contener texto.',
+    'observaciones.max' => 'Las observaciones no deben superar los 5000 caracteres.',
+]);
 
         $documento = Documento::findOrFail($id_documento);
-        $documento->update([
-            'estado_validacion' => $request->estado_validacion,
-            'observaciones'     => $request->observaciones
-        ]);
+        $documento->update($datos);
 
         return back()->with('success', 'Estado del documento actualizado a: ' . $request->estado_validacion);
     }

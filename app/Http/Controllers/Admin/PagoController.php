@@ -14,20 +14,26 @@ class PagoController
 
         $solicitudes = Solicitud::with(['alumno', 'detalles.servicio'])
             ->where('estado', $estadoFiltro)
-            ->when($buscar, function ($query, $buscar) {
-                return $query->where('folio', 'LIKE', "%{$buscar}%")
-                             ->orWhereHas('alumno', function($q) use ($buscar) {
-                                 $q->where('matricula', 'LIKE', "%{$buscar}%")
-                                   ->orWhere('nombres', 'LIKE', "%{$buscar}%")
-                                   ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%");
-                             });
-            })
+
+->when($buscar, function ($query, $buscar) {
+    return $query->where(function ($q) use ($buscar) {
+        $q->where('folio', 'LIKE', "%{$buscar}%")
+          ->orWhereHas('alumno', function ($alumno) use ($buscar) {
+              $alumno->where(function ($datos) use ($buscar) {
+                  $datos->where('matricula', 'LIKE', "%{$buscar}%")
+                        ->orWhere('nombres', 'LIKE', "%{$buscar}%")
+                        ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%");
+              });
+          });
+    });
+})
+
             ->orderBy('created_at', 'desc')
             ->paginate(10); 
-            
+
         return view('admin.pagos.index', compact('solicitudes', 'buscar', 'estadoFiltro'));
     }
-    
+
     public function updateEstado(Request $request, $id_solicitud)
     {
         $request->validate([

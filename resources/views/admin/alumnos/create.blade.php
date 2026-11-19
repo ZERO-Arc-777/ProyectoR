@@ -135,9 +135,26 @@
 
                 <hr class="border-secondary my-3">
 
-                <a href="{{ route('logout') }}" class="admin-nav admin-logout">
-                    <i class="bi bi-power"></i> Cerrar sesión
-                </a>
+                <!-- CERRAR SESIÓN SEGURO -->
+<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+    @csrf
+
+    <button type="submit"
+            class="admin-nav admin-logout"
+            style="background: none;
+                   border: none;
+                   cursor: pointer;
+                   width: 100%;
+                   text-align: left;
+                   font: inherit;
+                   display: flex;
+                   align-items: center;
+                   gap: 12px;
+                   white-space: nowrap;">
+        <i class="bi bi-power"></i>
+        <span>Cerrar sesión</span>
+    </button>
+</form>
             </nav>
         </aside>
 
@@ -169,16 +186,20 @@
 
                         <div class="row">
                             <div class="col-12 mb-3 text-start">
-                                <label class="fw-bold text-dark mb-1 ms-1">Vincular a Cuenta de Usuario</label>
-                                <select name="id_usuario" id="buscador-usuarios" class="form-select border-0 shadow-sm" required>
-                                    <option value="">-- Selecciona una cuenta --</option>
-                                    @foreach($usuarios as $user)
-                                        <option value="{{ $user->id_usuario }}" {{ old('id_usuario') == $user->id_usuario ? 'selected' : '' }}>
-                                            {{ $user->nombre }} ({{ $user->correo }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+    <label class="fw-bold text-dark mb-1 ms-1">
+        Matrícula
+    </label>
+
+    <input
+        type="text"
+        name="matricula"
+        class="form-control border-0 shadow-sm"
+        value="{{ old('matricula') }}"
+        maxlength="30"
+        placeholder="Ingrese la matrícula del alumno"
+        required
+    >
+</div>
 
                             <div class="col-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">CURP</label>

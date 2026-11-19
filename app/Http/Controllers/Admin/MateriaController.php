@@ -11,7 +11,7 @@ class MateriaController
     public function index(Request $request)
     {
         $buscar = $request->input('buscar');
-        
+
         $materias = MateriaA::when($buscar, function($query, $buscar) {
             return $query->where('nombre', 'LIKE', "%{$buscar}%");
         })->orderBy('semestre', 'asc')->paginate(10);
@@ -24,27 +24,25 @@ class MateriaController
         return view('admin.materias.creadorM');
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'semestre' => 'required|integer|min:1|max:6',
-        ]);
 
-        dd([
+public function store(Request $request)
+{
+    $request->validate([
+        'nombre' => 'required|string|max:100',
+        'semestre' => 'required|integer|min:1|max:6',
+    ]);
+
+    MateriaA::create([
         'nombre' => strtoupper($request->nombre),
         'semestre' => $request->semestre,
         'estado' => 'ACTIVA'
-        ]);
+    ]);
 
-        MateriaA::create([
-            'nombre' => strtoupper($request->nombre),
-            'semestre' => $request->semestre,
-            'estado' => 'ACTIVA'
-        ]);
+    return redirect()
+        ->route('admin.materias')
+        ->with('success', 'Materia registrada correctamente.');
+}
 
-        return redirect()->route('admin.materias')->with('success', 'Materia registrada correctamente.');
-    }
 
     public function edit($id_materia)
     {
@@ -55,13 +53,13 @@ class MateriaController
     public function update(Request $request, $id_materia)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:100',
             'semestre' => 'required|integer|min:1|max:6',
             'estado' => 'required|in:ACTIVA,INACTIVA'
         ]);
 
         $materia = MateriaA::findOrFail($id_materia);
-        
+
         $materia->update([
             'nombre' => strtoupper($request->nombre),
             'semestre' => $request->semestre,
