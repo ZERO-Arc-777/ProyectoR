@@ -115,9 +115,26 @@
 
                 <hr class="border-secondary my-3">
 
-                <a href="{{ route('logout') }}" class="admin-nav admin-logout">
-                    <i class="bi bi-power"></i> Cerrar sesión
-                </a>
+                <!-- CERRAR SESIÓN SEGURO -->
+<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+    @csrf
+
+    <button type="submit"
+            class="admin-nav admin-logout"
+            style="background: none;
+                   border: none;
+                   cursor: pointer;
+                   width: 100%;
+                   text-align: left;
+                   font: inherit;
+                   display: flex;
+                   align-items: center;
+                   gap: 12px;
+                   white-space: nowrap;">
+        <i class="bi bi-power"></i>
+        <span>Cerrar sesión</span>
+    </button>
+</form>
             </nav>
         </aside>
 
@@ -160,8 +177,7 @@
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Contraseña</label>
-                                <input type="password" name="contrasena" class="form-control border-0 shadow-sm" placeholder="Mínimo 6 caracteres" required minlength="6">
-                            </div>
+<input type="password" name="contrasena" class="form-control border-0 shadow-sm" placeholder="Mínimo 12 caracteres" required minlength="12" maxlength="255" autocomplete="new-password">                            </div>
 
                             <div class="col-md-6 mb-4 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Rol en el Sistema</label>

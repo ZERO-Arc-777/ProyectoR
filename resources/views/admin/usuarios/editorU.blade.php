@@ -115,9 +115,26 @@
 
                 <hr class="border-secondary my-3">
 
-                <a href="{{ route('logout') }}" class="admin-nav admin-logout">
-                    <i class="bi bi-power"></i> Cerrar sesión
-                </a>
+                <!-- CERRAR SESIÓN SEGURO -->
+<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+    @csrf
+
+    <button type="submit"
+            class="admin-nav admin-logout"
+            style="background: none;
+                   border: none;
+                   cursor: pointer;
+                   width: 100%;
+                   text-align: left;
+                   font: inherit;
+                   display: flex;
+                   align-items: center;
+                   gap: 12px;
+                   white-space: nowrap;">
+        <i class="bi bi-power"></i>
+        <span>Cerrar sesión</span>
+    </button>
+</form>
             </nav>
         </aside>
 
@@ -180,8 +197,13 @@
 
                             <div class="col-12 mb-4 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Nueva Contraseña <small class="text-danger fw-normal">(Opcional)</small></label>
-                                <input type="password" name="password" class="form-control border-0 shadow-sm" placeholder="Dejar en blanco para mantener la actual">
-                            </div>
+<input type="password"
+       name="password"
+       class="form-control border-0 shadow-sm"
+       placeholder="Dejar en blanco para mantener la actual (mínimo 12 caracteres)"
+       minlength="12"
+       maxlength="255"
+       autocomplete="new-password">                            </div>
                         </div>
 
                         <div class="d-flex justify-content-end mt-2 gap-3">

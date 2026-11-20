@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Alumno;
 use App\Models\User;
+use Illuminate\Validation\Rule;
 
 class AlumnoController
 {
@@ -16,96 +16,243 @@ class AlumnoController
         $alumnos = Alumno::with('usuario')
             ->when($buscar, function ($query, $buscar) {
                 return $query->where('matricula', 'LIKE', "%{$buscar}%")
-                             ->orWhere('nombres', 'LIKE', "%{$buscar}%")
-                             ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%")
-                             ->orWhere('curp', 'LIKE', "%{$buscar}%");
+                    ->orWhere('nombres', 'LIKE', "%{$buscar}%")
+                    ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%")
+                    ->orWhere('curp', 'LIKE', "%{$buscar}%");
             })
             ->orderBy('matricula', 'desc')
-            ->paginate(10); 
-            
+            ->paginate(10);
+
         return view('admin.alumnos.index', compact('alumnos', 'buscar'));
     }
 
     public function create()
     {
-        $usuariosOcupados = Alumno::whereNotNull('id_usuario')->pluck('id_usuario')->toArray();
-        
+        $usuariosOcupados = Alumno::whereNotNull('id_usuario')
+            ->pluck('id_usuario')
+            ->toArray();
+
         $usuarios = User::where('id_rol', 3)
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
-        
+
         return view('admin.alumnos.create', compact('usuarios'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'id_usuario'       => 'required|exists:usuarios,id_usuario|unique:alumnos,id_usuario',
-            'matricula'        => 'required|string|unique:alumnos,matricula',
-            'nombres'          => 'required|string|max:100',
-            'apellido_paterno' => 'required|string|max:100',
-            'apellido_materno' => 'nullable|string|max:100',
-            'curp'             => 'required|string|size:18|unique:alumnos,curp',
-            'semestre'         => 'required|integer|in:1,3,5',
-            'grupo'            => 'required|string|in:A,B'
+        // Normalizar la CURP antes de validarla.
+        $request->merge([
+            'curp' => strtoupper(trim((string) $request->input('curp', ''))),
         ]);
 
+        $datos = $request->validate([
+            'id_usuario' => [
+                'required',
+                'integer',
+                Rule::exists('usuarios', 'id_usuario')
+                    ->where('id_rol', 3),
+                Rule::unique('alumnos', 'id_usuario'),
+            ],
+
+            'matricula' => [
+                'required',
+                'string',
+                'max:30',
+                Rule::unique('alumnos', 'matricula'),
+            ],
+
+            'nombres' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'apellido_paterno' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'apellido_materno' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'curp' => [
+                'required',
+                'string',
+                'size:18',
+                'regex:/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$/',
+                Rule::unique('alumnos', 'curp'),
+            ],
+
+            'semestre' => [
+                'required',
+                'integer',
+                Rule::in([1, 2, 3, 4, 5, 6]),
+            ],
+
+            'grupo' => [
+                'required',
+                'string',
+                Rule::in(['A', 'B']),
+            ],
+        ]);
+
+        // El estado inicial es establecido por el servidor.
         Alumno::create([
-            'id_usuario'       => $request->id_usuario,
-            'matricula'        => $request->matricula,
-            'nombres'          => $request->nombres,
-            'apellido_paterno' => $request->apellido_paterno,
-            'apellido_materno' => $request->apellido_materno,
-            'curp'             => $request->curp,
-            'semestre'         => $request->semestre,
-            'grupo'            => $request->grupo,
-            'estado'           => 'ACTIVO'
+            ...$datos,
+            'estado' => 'ACTIVO',
         ]);
 
-        return redirect()->route('admin.alumnos')->with('success', 'Expediente de alumno creado correctamente.');
+        return redirect()
+            ->route('admin.alumnos')
+            ->with(
+                'success',
+                'Expediente de alumno creado correctamente.'
+            );
     }
 
     public function edit($id)
     {
-        $alumno = Alumno::where('matricula', $id)->firstOrFail(); 
-        
+        $alumno = Alumno::where('matricula', $id)
+            ->firstOrFail();
+
         $usuariosOcupados = Alumno::whereNotNull('id_usuario')
             ->where('matricula', '!=', $id)
-            ->pluck('id_usuario')->toArray();
+            ->pluck('id_usuario')
+            ->toArray();
 
         $usuarios = User::where('id_rol', 3)
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
 
-        return view('admin.alumnos.editorA', compact('alumno', 'usuarios'));
+        return view(
+            'admin.alumnos.editorA',
+            compact('alumno', 'usuarios')
+        );
     }
 
     public function update(Request $request, $id)
     {
-        $alumno = Alumno::where('matricula', $id)->firstOrFail();
+        // Buscar el alumno mediante su matrícula actual.
+        $alumno = Alumno::where('matricula', $id)
+            ->firstOrFail();
 
-        $request->validate([
-            'id_usuario'       => 'required|exists:usuarios,id_usuario|unique:alumnos,id_usuario,' . $alumno->id_alumno . ',id_alumno',
-            'matricula'        => 'required|string|unique:alumnos,matricula,' . $alumno->id_alumno . ',id_alumno',
-            'nombres'          => 'required|string|max:100',
-            'apellido_paterno' => 'required|string|max:100',
-            'apellido_materno' => 'nullable|string|max:100',
-            'curp'             => 'required|string|size:18|unique:alumnos,curp,' . $alumno->id_alumno . ',id_alumno',
-            'semestre'         => 'required|integer|in:1,3,5',
-            'grupo'            => 'required|string|in:A,B'
+        /*
+        |--------------------------------------------------------------------------
+        | CONSERVAR MATRÍCULA CUANDO NO SE ENVÍA
+        |--------------------------------------------------------------------------
+        |
+        | Si el formulario no incluye el campo matrícula,
+        | se conserva la matrícula que ya tiene el alumno.
+        |
+        | Si se envía una nueva matrícula, se validará
+        | para evitar duplicados.
+        |
+        | Si se envía explícitamente una matrícula vacía,
+        | la validación la rechazará.
+        |
+        */
+
+        if (!$request->exists('matricula')) {
+            $request->merge([
+                'matricula' => $alumno->matricula,
+            ]);
+        }
+
+        // Normalizar la CURP antes de validarla.
+        $request->merge([
+            'curp' => strtoupper(
+                trim((string) $request->input('curp', ''))
+            ),
         ]);
 
-        $alumno->id_usuario       = $request->id_usuario;
-        $alumno->matricula        = $request->matricula;
-        $alumno->curp             = $request->curp;
-        $alumno->nombres          = $request->nombres;
-        $alumno->apellido_paterno = $request->apellido_paterno;
-        $alumno->apellido_materno = $request->apellido_materno;
-        $alumno->semestre         = $request->semestre;
-        $alumno->grupo            = $request->grupo;
-        
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDACIÓN SEGURA DE DATOS
+        |--------------------------------------------------------------------------
+        */
+
+        $datos = $request->validate([
+            'id_usuario' => [
+                'required',
+                'integer',
+                Rule::exists('usuarios', 'id_usuario')
+                    ->where('id_rol', 3),
+                Rule::unique('alumnos', 'id_usuario')
+                    ->ignore($alumno->id_alumno, 'id_alumno'),
+            ],
+
+            'matricula' => [
+                'required',
+                'string',
+                'max:30',
+                Rule::unique('alumnos', 'matricula')
+                    ->ignore($alumno->id_alumno, 'id_alumno'),
+            ],
+
+            'nombres' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'apellido_paterno' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'apellido_materno' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'curp' => [
+                'required',
+                'string',
+                'size:18',
+                'regex:/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$/',
+                Rule::unique('alumnos', 'curp')
+                    ->ignore($alumno->id_alumno, 'id_alumno'),
+            ],
+
+            'semestre' => [
+                'required',
+                'integer',
+                Rule::in([1, 2, 3, 4, 5, 6]),
+            ],
+
+            'grupo' => [
+                'required',
+                'string',
+                Rule::in(['A', 'B']),
+            ],
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | ACTUALIZACIÓN DEL EXPEDIENTE
+        |--------------------------------------------------------------------------
+        |
+        | Solo se modifican los campos que fueron validados.
+        | No se permite alterar el estado administrativo
+        | mediante campos adicionales enviados en la petición.
+        |
+        */
+
+        $alumno->fill($datos);
         $alumno->save();
 
-        return redirect()->route('admin.alumnos')->with('success', 'Expediente de alumno modificado correctamente.');
+        return redirect()
+            ->route('admin.alumnos')
+            ->with(
+                'success',
+                'Expediente de alumno modificado correctamente.'
+            );
     }
 }

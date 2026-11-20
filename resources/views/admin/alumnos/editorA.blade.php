@@ -65,7 +65,7 @@
 
     .admin-logout { color: #ffb3b9; }
     .admin-logout:hover { color: #ffffff; background: rgba(220, 53, 69, .22); }
-    
+
     .select2-container--default .select2-selection--single {
         background-color: #fff;
         border: 0 !important;
@@ -74,12 +74,12 @@
         padding: 0.75rem 0.75rem !important;
         box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
     }
-    
+
     .select2-container--default .select2-selection--single .select2-selection__rendered {
         color: #212529 !important;
         line-height: 1.5 !important;
     }
-    
+
     .select2-container--default .select2-selection--single .select2-selection__arrow {
         height: calc(3.5rem + 2px) !important;
         right: 10px !important;
@@ -122,7 +122,7 @@
                 </a>
 
                 <div class="mt-2 mb-1 ps-3 text-white-50 small fw-bold" style="letter-spacing: 0.5px;">REVISIONES</div>
-                
+
                 <a href="{{ route('admin.revision.inscripciones') }}" class="admin-nav-sub">
                     <i class="bi bi-arrow-return-right me-1"></i> Inscripciones
                 </a>
@@ -135,9 +135,26 @@
 
                 <hr class="border-secondary my-3">
 
-                <a href="{{ route('logout') }}" class="admin-nav admin-logout">
-                    <i class="bi bi-power"></i> Cerrar sesión
-                </a>
+                <!-- CERRAR SESIÓN SEGURO -->
+<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+    @csrf
+
+    <button type="submit"
+            class="admin-nav admin-logout"
+            style="background: none;
+                   border: none;
+                   cursor: pointer;
+                   width: 100%;
+                   text-align: left;
+                   font: inherit;
+                   display: flex;
+                   align-items: center;
+                   gap: 12px;
+                   white-space: nowrap;">
+        <i class="bi bi-power"></i>
+        <span>Cerrar sesión</span>
+    </button>
+</form>
             </nav>
         </aside>
 
@@ -149,6 +166,22 @@
                 </div>
 
                 <div class="card-body p-4 p-md-5">
+
+@if ($errors->any())
+    <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+        <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <span>Por favor, corrige los siguientes errores:</span>
+        </div>
+
+        <ul class="mb-0 ps-4">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
                     <form action="{{ route('admin.alumnos.update', $alumno->matricula) }}" method="POST">
                         @csrf
                         @method('PUT')
@@ -159,7 +192,7 @@
                                 <select name="id_usuario" id="buscador-usuarios" class="form-select border-0 shadow-sm" required>
                                     <option value="">-- Selecciona una cuenta --</option>
                                     @foreach($usuarios as $user)
-                                        <option value="{{ $user->id_usuario }}" {{ $alumno->id_usuario == $user->id_usuario ? 'selected' : '' }}>
+                                        <option value="{{ $user->id_usuario }}" {{ old('id_usuario', $alumno->id_usuario) == $user->id_usuario ? 'selected' : '' }}>
                                             {{ $user->nombre }} ({{ $user->correo }})
                                         </option>
                                     @endforeach
@@ -173,41 +206,41 @@
 
                             <div class="col-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">CURP</label>
-                                <input type="text" name="curp" class="form-control border-0 shadow-sm text-uppercase fw-bold" maxlength="18" value="{{ $alumno->curp }}" required>
+                                <input type="text" name="curp" class="form-control border-0 shadow-sm text-uppercase fw-bold" maxlength="18" value="{{ old('curp', $alumno->curp) }}" required>
                             </div>
 
                             <div class="col-md-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Nombre(s)</label>
-                                <input type="text" name="nombres" class="form-control border-0 shadow-sm" value="{{ $alumno->nombres }}" required>
+                                <input type="text" name="nombres" class="form-control border-0 shadow-sm" value="{{ old('nombres', $alumno->nombres) }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Apellido Paterno</label>
-                                <input type="text" name="apellido_paterno" class="form-control border-0 shadow-sm" value="{{ $alumno->apellido_paterno }}" required>
+                                <input type="text" name="apellido_paterno" class="form-control border-0 shadow-sm" value="{{ old('apellido_paterno', $alumno->apellido_paterno) }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Apellido Materno</label>
-                                <input type="text" name="apellido_materno" class="form-control border-0 shadow-sm" value="{{ $alumno->apellido_materno }}">
+                                <input type="text" name="apellido_materno" class="form-control border-0 shadow-sm" value="{{ old('apellido_materno', $alumno->apellido_materno) }}">
                             </div>
 
                             <div class="col-md-6 mb-4 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Semestre</label>
                                 <select name="semestre" class="form-select border-0 shadow-sm fw-bold" required>
-                                    <option value="1" {{ $alumno->semestre == 1 ? 'selected' : '' }}>1° Semestre</option>
-                                    <option value="2" {{ $alumno->semestre == 2 ? 'selected' : '' }}>2° Semestre</option>
-                                    <option value="3" {{ $alumno->semestre == 3 ? 'selected' : '' }}>3° Semestre</option>
-                                    <option value="4" {{ $alumno->semestre == 4 ? 'selected' : '' }}>4° Semestre</option>
-                                    <option value="5" {{ $alumno->semestre == 5 ? 'selected' : '' }}>5° Semestre</option>
-                                    <option value="6" {{ $alumno->semestre == 6 ? 'selected' : '' }}>6° Semestre</option>
+                                    <option value="1" {{ old('semestre', $alumno->semestre) == 1 ? 'selected' : '' }}>1° Semestre</option>
+                                    <option value="2" {{ old('semestre', $alumno->semestre) == 2 ? 'selected' : '' }}>2° Semestre</option>
+                                    <option value="3" {{ old('semestre', $alumno->semestre) == 3 ? 'selected' : '' }}>3° Semestre</option>
+                                    <option value="4" {{ old('semestre', $alumno->semestre) == 4 ? 'selected' : '' }}>4° Semestre</option>
+                                    <option value="5" {{ old('semestre', $alumno->semestre) == 5 ? 'selected' : '' }}>5° Semestre</option>
+                                    <option value="6" {{ old('semestre', $alumno->semestre) == 6 ? 'selected' : '' }}>6° Semestre</option>
                                 </select>
                             </div>
 
                             <div class="col-md-6 mb-4 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Grupo</label>
                                 <select name="grupo" class="form-select border-0 shadow-sm fw-bold" required>
-                                    <option value="A" {{ $alumno->grupo == 'A' ? 'selected' : '' }}>Grupo A</option>
-                                    <option value="B" {{ $alumno->grupo == 'B' ? 'selected' : '' }}>Grupo B</option>
+                                    <option value="A" {{ old('grupo', $alumno->grupo) == 'A' ? 'selected' : '' }}>Grupo A</option>
+                                    <option value="B" {{ old('grupo', $alumno->grupo) == 'B' ? 'selected' : '' }}>Grupo B</option>
                                 </select>
                             </div>
                         </div>

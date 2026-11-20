@@ -2,87 +2,345 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Rol;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UsuarioController
 {
+    // ==========================================
+    // CONSULTAR USUARIOS
+    // ==========================================
+
     public function index(Request $request)
     {
-        $buscar = $request->get('buscar');
+        $datos = $request->validate([
+            'buscar' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $buscar = trim($datos['buscar'] ?? '');
 
         $usuarios = User::with('rol')
-            ->when($buscar, function ($query, $buscar) {
-                return $query->where('nombre', 'LIKE', "%{$buscar}%")
-                             ->orWhere('correo', 'LIKE', "%{$buscar}%");
+            ->when($buscar !== '', function ($query) use ($buscar) {
+                $query->where(function ($q) use ($buscar) {
+                    $q->where('nombre', 'LIKE', "%{$buscar}%")
+                        ->orWhere('correo', 'LIKE', "%{$buscar}%");
+                });
             })
             ->orderBy('id_usuario', 'desc')
-            ->paginate(10); 
-            
-        return view('admin.usuarios.index', compact('usuarios', 'buscar'));
+            ->paginate(10)
+            ->withQueryString();
+
+        return view(
+            'admin.usuarios.index',
+            compact('usuarios', 'buscar')
+        );
     }
+
+    // ==========================================
+    // MOSTRAR FORMULARIO DE REGISTRO
+    // ==========================================
 
     public function create()
     {
         $roles = Rol::all();
-        return view('admin.usuarios.creadorU', compact('roles'));
+
+        return view(
+            'admin.usuarios.creadorU',
+            compact('roles')
+        );
     }
+
+    // ==========================================
+    // REGISTRAR USUARIO
+    // ==========================================
 
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre'     => 'required|string|max:255',
-            'correo'     => 'required|email|unique:usuarios,correo',
-            'contrasena' => 'required|min:6',
-            'id_rol'     => 'required|exists:roles,id_rol'
-        ]);
+        $datos = $request->validate(
+            [
+                'nombre' => [
+                    'required',
+                    'string',
+                    'max:100',
+                ],
+
+                'correo' => [
+                    'required',
+                    'email',
+                    'max:100',
+                    Rule::unique('usuarios', 'correo'),
+                ],
+
+                'contrasena' => [
+                    'required',
+                    'string',
+                    'min:12',
+                    'max:255',
+                ],
+
+                'id_rol' => [
+                    'required',
+                    'integer',
+                    Rule::exists('roles', 'id_rol'),
+                ],
+            ],
+            $this->mensajesValidacion(),
+            $this->atributosValidacion()
+        );
 
         User::create([
-            'nombre'     => $request->nombre,
-            'correo'     => $request->correo,
-            'contrasena' => Hash::make($request->contrasena),
-            'id_rol'     => $request->id_rol,
-            'estado'     => 1
+            'nombre' => $datos['nombre'],
+            'correo' => $datos['correo'],
+            'contrasena' => Hash::make($datos['contrasena']),
+            'id_rol' => $datos['id_rol'],
+            'estado' => 'ACTIVO',
         ]);
 
-        return redirect()->route('admin.usuarios')->with('success', 'Usuario creado correctamente.');
+        return redirect()
+            ->route('admin.usuarios')
+            ->with('success', 'Usuario creado correctamente.');
     }
+
+    // ==========================================
+    // MOSTRAR FORMULARIO DE EDICION
+    // ==========================================
 
     public function edit($id)
     {
-        $usuario = User::findOrFail($id); 
-        $roles = Rol::all(); 
+        $usuario = User::findOrFail($id);
 
-        return view('admin.usuarios.editorU', compact('usuario', 'roles'));
+        $roles = Rol::all();
+
+        return view(
+            'admin.usuarios.editorU',
+            compact('usuario', 'roles')
+        );
     }
+
+    // ==========================================
+    // ACTUALIZAR USUARIO
+    // ==========================================
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'nombre'     => 'required|string|max:255',
-            'correo'     => 'required|email|unique:usuarios,correo,' . $id . ',id_usuario',
-            'id_rol'     => 'required|exists:roles,id_rol',
-            'contrasena' => 'nullable|min:6' 
-        ]);
-
+        // Comprobar que el usuario existe.
         $usuario = User::findOrFail($id);
 
-        $usuario->nombre = $request->nombre; 
-        $usuario->correo = $request->correo; 
-        $usuario->id_rol = $request->id_rol;
+        // Aceptar ambos nombres de campo utilizados
+        // por las versiones de los formularios.
+        $datos = $request->validate(
+            [
+                'nombre' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
 
-        if ($request->filled('contrasena')) {
-            $usuario->contrasena = Hash::make($request->contrasena);
+                'correo' => [
+                    'required',
+                    'email',
+                    'max:255',
+                    Rule::unique('usuarios', 'correo')
+                        ->ignore($usuario->id_usuario, 'id_usuario'),
+                ],
+
+                'id_rol' => [
+                    'required',
+                    'integer',
+                    Rule::exists('roles', 'id_rol'),
+                ],
+
+                'estado' => [
+                    'sometimes',
+                    'required',
+                    Rule::in(['ACTIVO', 'INACTIVO']),
+                ],
+
+                'contrasena' => [
+                    'nullable',
+                    'string',
+                    'min:12',
+                    'max:255',
+                ],
+
+                'password' => [
+                    'nullable',
+                    'string',
+                    'min:12',
+                    'max:255',
+                ],
+            ],
+            $this->mensajesValidacion(),
+            $this->atributosValidacion()
+        );
+
+        // Evitar recibir dos contraseñas distintas
+        // en una misma solicitud.
+        if (
+            !empty($datos['contrasena']) &&
+            !empty($datos['password'])
+        ) {
+            throw ValidationException::withMessages([
+                'contrasena' =>
+                    'Debes proporcionar la contraseña en un solo campo.',
+            ]);
         }
 
-        if ($request->has('estado')) {
-            $usuario->estado = $request->estado;
-        }
+        // Validar que se está utilizando una cuenta
+        // de administrador autenticada.
+        $idAdministrador = Auth::id();
 
-        $usuario->save();
+        DB::transaction(function () use (
+            $usuario,
+            $datos,
+            $idAdministrador
+        ) {
+            // Bloquear el registro durante la actualización.
+            $usuario = User::where(
+                'id_usuario',
+                $usuario->id_usuario
+            )
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        return redirect()->route('admin.usuarios')->with('success', 'Usuario modificado correctamente.');
+            $nuevoRol = (int) $datos['id_rol'];
+
+            // Conservar el estado actual cuando el
+            // formulario no envía este campo.
+            $nuevoEstado = $datos['estado']
+                ?? $usuario->estado;
+
+            // Impedir que un administrador modifique
+            // su propia cuenta para quitarse el acceso.
+            if (
+                (int) $idAdministrador ===
+                    (int) $usuario->id_usuario
+                &&
+                (
+                    $nuevoRol !== 1 ||
+                    $nuevoEstado !== 'ACTIVO'
+                )
+            ) {
+                throw ValidationException::withMessages([
+                    'estado' =>
+                        'No puedes desactivar tu propia cuenta ni quitarte el rol de administrador.',
+                ]);
+            }
+
+            // Impedir la desactivación del último
+            // administrador activo del sistema.
+            if (
+                (int) $usuario->id_rol === 1
+                &&
+                $usuario->estado === 'ACTIVO'
+                &&
+                (
+                    $nuevoRol !== 1 ||
+                    $nuevoEstado !== 'ACTIVO'
+                )
+            ) {
+                $administradoresActivos = User::where(
+                    'id_rol',
+                    1
+                )
+                    ->where('estado', 'ACTIVO')
+                    ->count();
+
+                if ($administradoresActivos <= 1) {
+                    throw ValidationException::withMessages([
+                        'estado' =>
+                            'No puedes desactivar o cambiar el rol del último administrador activo.',
+                    ]);
+                }
+            }
+
+            // Actualizar solamente los datos validados.
+            $usuario->nombre = $datos['nombre'];
+            $usuario->correo = $datos['correo'];
+            $usuario->id_rol = $nuevoRol;
+            $usuario->estado = $nuevoEstado;
+
+            // Detectar si se solicitó un cambio
+            // de contraseña.
+            $nuevaContrasena = $datos['contrasena']
+                ?? $datos['password']
+                ?? null;
+
+            if (
+                is_string($nuevaContrasena) &&
+                $nuevaContrasena !== ''
+            ) {
+                $usuario->contrasena = Hash::make(
+                    $nuevaContrasena
+                );
+            }
+
+            $usuario->save();
+        });
+
+        return redirect()
+            ->route('admin.usuarios')
+            ->with(
+                'success',
+                'Usuario modificado correctamente.'
+            );
+    }
+
+    // ==========================================
+    // MENSAJES DE VALIDACION
+    // ==========================================
+
+    private function mensajesValidacion(): array
+    {
+        return [
+            'required' =>
+                'El campo :attribute es obligatorio.',
+
+            'string' =>
+                'El campo :attribute debe contener texto.',
+
+            'email' =>
+                'El correo electrónico no tiene un formato válido.',
+
+            'min' =>
+                'El campo :attribute debe contener al menos :min caracteres.',
+
+            'max' =>
+                'El campo :attribute no debe superar :max caracteres.',
+
+            'unique' =>
+                'El :attribute ya está registrado.',
+
+            'integer' =>
+                'El campo :attribute debe ser un número entero.',
+
+            'exists' =>
+                'El rol seleccionado no existe.',
+
+            'in' =>
+                'El estado seleccionado no es válido.',
+        ];
+    }
+
+    // ==========================================
+    // NOMBRES DE LOS CAMPOS
+    // ==========================================
+
+    private function atributosValidacion(): array
+    {
+        return [
+            'nombre' => 'nombre completo',
+            'correo' => 'correo electrónico',
+            'contrasena' => 'contraseña',
+            'password' => 'contraseña',
+            'id_rol' => 'rol',
+            'estado' => 'estado',
+        ];
     }
 }
