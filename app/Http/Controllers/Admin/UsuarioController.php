@@ -139,13 +139,13 @@ class UsuarioController
                 'nombre' => [
                     'required',
                     'string',
-                    'max:255',
+                    'max:100',
                 ],
 
                 'correo' => [
                     'required',
                     'email',
-                    'max:255',
+                    'max:100',
                     Rule::unique('usuarios', 'correo')
                         ->ignore($usuario->id_usuario, 'id_usuario'),
                 ],

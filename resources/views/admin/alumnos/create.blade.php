@@ -136,25 +136,25 @@
                 <hr class="border-secondary my-3">
 
                 <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                    <button type="submit"
+                            class="admin-nav admin-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
             </nav>
         </aside>
 
@@ -186,24 +186,20 @@
 
                         <div class="row">
                             <div class="col-12 mb-3 text-start">
-    <label class="fw-bold text-dark mb-1 ms-1">
-        Matrícula
-    </label>
-
-    <input
-        type="text"
-        name="matricula"
-        class="form-control border-0 shadow-sm"
-        value="{{ old('matricula') }}"
-        maxlength="30"
-        placeholder="Ingrese la matrícula del alumno"
-        required
-    >
-</div>
+                                <label class="fw-bold text-dark mb-1 ms-1">Vincular a Cuenta de Usuario</label>
+                                <select name="id_usuario" id="buscador-usuarios" class="form-select border-0 shadow-sm" required>
+                                    <option value="">-- Selecciona una cuenta --</option>
+                                    @foreach($usuarios as $user)
+                                        <option value="{{ $user->id_usuario }}" {{ old('id_usuario') == $user->id_usuario ? 'selected' : '' }}>
+                                            {{ $user->nombre }} ({{ $user->correo }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
                             <div class="col-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Matrícula</label>
-                                <input type="text" name="matricula" class="form-control border-0 shadow-sm fw-bold" value="{{ old('matricula') }}" required>
+                                <input type="text" name="matricula" class="form-control border-0 shadow-sm fw-bold" maxlength="30" placeholder="Ingrese la matrícula del alumno" value="{{ old('matricula') }}" required>
                             </div>
 
                             <div class="col-12 mb-3 text-start">
@@ -213,17 +209,17 @@
 
                             <div class="col-md-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Nombre(s)</label>
-                                <input type="text" name="nombres" class="form-control border-0 shadow-sm" value="{{ old('nombres') }}" required>
+                                <input type="text" name="nombres" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('nombres') }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Apellido Paterno</label>
-                                <input type="text" name="apellido_paterno" class="form-control border-0 shadow-sm" value="{{ old('apellido_paterno') }}" required>
+                                <input type="text" name="apellido_paterno" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('apellido_paterno') }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Apellido Materno</label>
-                                <input type="text" name="apellido_materno" class="form-control border-0 shadow-sm" value="{{ old('apellido_materno') }}">
+                                <input type="text" name="apellido_materno" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('apellido_materno') }}">
                             </div>
 
                             <div class="col-md-6 mb-4 text-start">

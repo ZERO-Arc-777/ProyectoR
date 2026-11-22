@@ -17,7 +17,6 @@
         background-color: #f4f6f9; 
     }
 
-    /* MENÚ LATERAL */
     .admin-sidebar {
         background: #212529;
         border-right: 1px solid #343a40;
@@ -60,7 +59,9 @@
         transition: color .2s;
     }
 
-    .admin-nav-sub:hover { color: #ffffff; }
+    .admin-nav-sub:hover { 
+        color: #ffffff; 
+    }
     
     .admin-nav-sub.active { 
         color: #198754; 
@@ -137,25 +138,25 @@
                 <hr class="border-secondary my-3">
 
                 <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                    <button type="submit"
+                            class="admin-nav admin-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
 
             </nav>
         </aside>
@@ -171,6 +172,27 @@
             @if(session('success'))
                 <div class="alert alert-success fw-bold rounded-3 shadow-sm border-0 mb-4">
                     <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                        <span>Por favor, corrige los siguientes errores:</span>
+                    </div>
+
+                    <ul class="mb-0 ps-4">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                 </div>
             @endif
 

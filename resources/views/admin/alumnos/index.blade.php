@@ -131,25 +131,25 @@
                 <hr class="border-secondary my-3">
 
                 <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                    <button type="submit"
+                            class="admin-nav admin-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
 
             </nav>
         </aside>
@@ -197,6 +197,7 @@
                                 <th>NOMBRE COMPLETO</th>
                                 <th>CURP</th>
                                 <th class="text-center">SEMESTRE / GRUPO</th>
+                                <th class="text-center">ESTADO</th>
                                 <th class="text-center">ACCIONES</th>
                             </tr>
                         </thead>
@@ -212,6 +213,21 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
+                                        @if($alumno->estado == 'ACTIVO')
+                                            <span class="badge bg-success px-3 py-2 rounded-pill">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Activo
+                                            </span>
+                                        @elseif($alumno->estado == 'EGRESADO')
+                                            <span class="badge bg-primary px-3 py-2 rounded-pill">
+                                                <i class="bi bi-mortarboard-fill me-1"></i> Egresado
+                                            </span>
+                                        @else
+                                            <span class="badge bg-danger px-3 py-2 rounded-pill">
+                                                <i class="bi bi-x-circle-fill me-1"></i> Baja
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
                                         <a href="{{ route('admin.alumnos.edit', $alumno->matricula) }}" class="btn btn-sm btn-outline-dark fw-bold px-3 rounded-pill">
                                             <i class="bi bi-pencil-square me-1"></i> Editar
                                         </a>
@@ -219,7 +235,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-5">
+                                    <td colspan="6" class="text-center py-5">
                                         <i class="bi bi-search fs-1 text-muted opacity-50 d-block mb-2"></i>
                                         <span class="fw-bold text-muted">No se encontraron alumnos con esa búsqueda.</span>
                                     </td>

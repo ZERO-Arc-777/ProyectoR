@@ -14,7 +14,6 @@
 <style>
     .alumno-panel { min-height: 100vh; background-color: #f4f6f9; }
     
-    /* MENÚ LATERAL */
     .alumno-sidebar { background: #212529; border-right: 1px solid #343a40; }
     .alumno-sidebar-title { font-weight: 800; letter-spacing: 1.2px; color: #ffffff; }
     
@@ -60,26 +59,27 @@
                     <i class="bi bi-cash-coin"></i> Trámites y Pagos
                 </a>
                 <hr class="border-secondary my-3">
-                <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                <!-- CERRAR SESIÓN SEGURO -->
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
+
+                    <button type="submit"
+                            class="alumno-nav alumno-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
             </nav>
         </aside>
 
@@ -97,7 +97,21 @@
 
             @if ($errors->any())
                 <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Debes seleccionar al menos un servicio para generar la solicitud.
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                        <span>Por favor, corrige los siguientes errores:</span>
+                    </div>
+                    <ul class="mb-0 ps-4">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                 </div>
             @endif
 
@@ -121,7 +135,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($servicios as $servicio)
+                                    @forelse ($servicios as $servicio)
                                         <tr>
                                             <td class="text-center">
                                                 <div class="form-check d-flex justify-content-center m-0">
@@ -129,6 +143,7 @@
                                                            type="checkbox" 
                                                            name="servicios[]" 
                                                            value="{{ $servicio->id_servicio }}" 
+                                                           {{ in_array($servicio->id_servicio, (array) old('servicios', [])) ? 'checked' : '' }}
                                                            style="width: 1.5em; height: 1.5em; cursor: pointer;">
                                                 </div>
                                             </td>
@@ -138,13 +153,22 @@
                                                 ${{ number_format($servicio->total, 2) }}
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center py-5">
+                                                <i class="bi bi-card-list fs-1 text-muted opacity-50 d-block mb-2"></i>
+                                                <span class="fw-bold text-muted">Por el momento no hay servicios disponibles en el catálogo.</span>
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
                         
                         <div class="d-flex justify-content-end align-items-center">
-                            <button type="submit" class="btn btn-primary fw-bold px-4 py-2 text-uppercase shadow-sm">
+                            <button type="submit"
+                                    class="btn btn-primary fw-bold px-4 py-2 text-uppercase shadow-sm"
+                                    {{ $servicios->isEmpty() ? 'disabled' : '' }}>
                                 <i class="bi bi-receipt me-2"></i> Generar Solicitud
                             </button>
                         </div>

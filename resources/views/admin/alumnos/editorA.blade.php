@@ -136,25 +136,25 @@
                 <hr class="border-secondary my-3">
 
                 <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                    <button type="submit"
+                            class="admin-nav admin-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
             </nav>
         </aside>
 
@@ -167,20 +167,20 @@
 
                 <div class="card-body p-4 p-md-5">
 
-@if ($errors->any())
-    <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
-        <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-            <span>Por favor, corrige los siguientes errores:</span>
-        </div>
+                    @if ($errors->any())
+                        <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                                <span>Por favor, corrige los siguientes errores:</span>
+                            </div>
 
-        <ul class="mb-0 ps-4">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+                            <ul class="mb-0 ps-4">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
                     <form action="{{ route('admin.alumnos.update', $alumno->matricula) }}" method="POST">
                         @csrf
@@ -201,7 +201,7 @@
 
                             <div class="col-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Matrícula</label>
-                                <input type="text" name="matricula" class="form-control border-0 shadow-sm fw-bold" value="{{ old('matricula', $alumno->matricula) }}" required>
+                                <input type="text" name="matricula" class="form-control border-0 shadow-sm fw-bold" maxlength="30" value="{{ old('matricula', $alumno->matricula) }}" required>
                             </div>
 
                             <div class="col-12 mb-3 text-start">
@@ -211,20 +211,20 @@
 
                             <div class="col-md-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Nombre(s)</label>
-                                <input type="text" name="nombres" class="form-control border-0 shadow-sm" value="{{ old('nombres', $alumno->nombres) }}" required>
+                                <input type="text" name="nombres" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('nombres', $alumno->nombres) }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Apellido Paterno</label>
-                                <input type="text" name="apellido_paterno" class="form-control border-0 shadow-sm" value="{{ old('apellido_paterno', $alumno->apellido_paterno) }}" required>
+                                <input type="text" name="apellido_paterno" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('apellido_paterno', $alumno->apellido_paterno) }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Apellido Materno</label>
-                                <input type="text" name="apellido_materno" class="form-control border-0 shadow-sm" value="{{ old('apellido_materno', $alumno->apellido_materno) }}">
+                                <input type="text" name="apellido_materno" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('apellido_materno', $alumno->apellido_materno) }}">
                             </div>
 
-                            <div class="col-md-6 mb-4 text-start">
+                            <div class="col-md-4 mb-4 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Semestre</label>
                                 <select name="semestre" class="form-select border-0 shadow-sm fw-bold" required>
                                     <option value="1" {{ old('semestre', $alumno->semestre) == 1 ? 'selected' : '' }}>1° Semestre</option>
@@ -236,11 +236,20 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-6 mb-4 text-start">
+                            <div class="col-md-4 mb-4 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Grupo</label>
                                 <select name="grupo" class="form-select border-0 shadow-sm fw-bold" required>
                                     <option value="A" {{ old('grupo', $alumno->grupo) == 'A' ? 'selected' : '' }}>Grupo A</option>
                                     <option value="B" {{ old('grupo', $alumno->grupo) == 'B' ? 'selected' : '' }}>Grupo B</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 mb-4 text-start">
+                                <label class="fw-bold text-dark mb-1 ms-1">Estado</label>
+                                <select name="estado" class="form-select border-0 shadow-sm fw-bold" required>
+                                    <option value="ACTIVO" {{ old('estado', $alumno->estado) == 'ACTIVO' ? 'selected' : '' }}>Activo</option>
+                                    <option value="BAJA" {{ old('estado', $alumno->estado) == 'BAJA' ? 'selected' : '' }}>Baja</option>
+                                    <option value="EGRESADO" {{ old('estado', $alumno->estado) == 'EGRESADO' ? 'selected' : '' }}>Egresado</option>
                                 </select>
                             </div>
                         </div>

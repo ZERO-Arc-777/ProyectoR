@@ -2,26 +2,30 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Http\Request;
 use App\Models\Alumno;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class AlumnoController
 {
     public function index(Request $request)
     {
-        $buscar = $request->get('buscar');
+        $buscar = trim((string) $request->get('buscar', ''));
 
         $alumnos = Alumno::with('usuario')
-            ->when($buscar, function ($query, $buscar) {
-                return $query->where('matricula', 'LIKE', "%{$buscar}%")
-                    ->orWhere('nombres', 'LIKE', "%{$buscar}%")
-                    ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%")
-                    ->orWhere('curp', 'LIKE', "%{$buscar}%");
+            ->when($buscar !== '', function ($query) use ($buscar) {
+                $query->where(function ($q) use ($buscar) {
+                    $q->where('matricula', 'LIKE', "%{$buscar}%")
+                        ->orWhere('nombres', 'LIKE', "%{$buscar}%")
+                        ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%")
+                        ->orWhere('apellido_materno', 'LIKE', "%{$buscar}%")
+                        ->orWhere('curp', 'LIKE', "%{$buscar}%");
+                });
             })
             ->orderBy('matricula', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.alumnos.index', compact('alumnos', 'buscar'));
     }
@@ -232,6 +236,12 @@ class AlumnoController
                 'string',
                 Rule::in(['A', 'B']),
             ],
+
+            'estado' => [
+                'sometimes',
+                'required',
+                Rule::in(['ACTIVO', 'BAJA', 'EGRESADO']),
+            ],
         ]);
 
         /*
@@ -240,8 +250,7 @@ class AlumnoController
         |--------------------------------------------------------------------------
         |
         | Solo se modifican los campos que fueron validados.
-        | No se permite alterar el estado administrativo
-        | mediante campos adicionales enviados en la petición.
+        | Si la petición no envía el estado, se conserva el actual.
         |
         */
 

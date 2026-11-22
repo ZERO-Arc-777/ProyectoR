@@ -130,25 +130,25 @@
                 <hr class="border-secondary my-3">
 
                 <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                    <button type="submit"
+                            class="admin-nav admin-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
 
             </nav>
         </aside>
@@ -197,16 +197,39 @@
                                 <th class="ps-4">ID</th>
                                 <th>NOMBRE</th>
                                 <th>CORREO</th>
+                                <th class="text-center">ROL</th>
                                 <th class="text-center">ESTADO</th>
                                 <th class="text-center">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($usuarios as $usuario)
+                                @php
+                                    $nombreRol = $usuario->rol?->nombre
+                                        ?? $usuario->rol?->nombre_rol
+                                        ?? match((int) $usuario->id_rol) {
+                                            1 => 'Administrador',
+                                            2 => 'Docente',
+                                            3 => 'Alumno',
+                                            default => 'Sin rol',
+                                        };
+
+                                    $claseRol = match((int) $usuario->id_rol) {
+                                        1 => 'bg-dark',
+                                        2 => 'bg-warning text-dark',
+                                        3 => 'bg-primary',
+                                        default => 'bg-secondary',
+                                    };
+                                @endphp
                                 <tr>
                                     <td class="fw-bold text-dark ps-4">#{{ $usuario->id_usuario }}</td>
                                     <td class="fw-bold text-dark">{{ $usuario->nombre }}</td>
                                     <td class="text-muted"><i class="bi bi-envelope me-1"></i>{{ $usuario->correo }}</td>
+                                    <td class="text-center">
+                                        <span class="badge {{ $claseRol }} px-3 py-2 rounded-pill">
+                                            {{ $nombreRol }}
+                                        </span>
+                                    </td>
                                     <td class="text-center">
                                         @if($usuario->estado == 'ACTIVO')
                                             <span class="badge bg-success px-3 py-2 rounded-pill">
@@ -226,7 +249,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-5">
+                                    <td colspan="6" class="text-center py-5">
                                         <i class="bi bi-search fs-1 text-muted opacity-50 d-block mb-2"></i>
                                         <span class="fw-bold text-muted">No se encontraron usuarios con esa búsqueda.</span>
                                     </td>

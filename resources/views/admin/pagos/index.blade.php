@@ -17,7 +17,6 @@
         background-color: #f4f6f9; 
     }
 
-    /* MENÚ LATERAL */
     .admin-sidebar {
         background: #212529;
         border-right: 1px solid #343a40;
@@ -64,68 +63,21 @@
         color: #ffffff;
     }
 
+    .admin-nav-sub.active { 
+        color: #198754; 
+        font-weight: bold;
+    }
+
     .admin-nav i { font-size: 1.15rem; }
 
-    /* ENCABEZADO Y TARJETAS */
-    .admin-welcome {
-        background: #212529;
-        border-radius: 20px;
-        padding: 32px;
-        color: #ffffff;
-    }
-
-    .admin-welcome-icon {
-        width: 66px;
-        height: 66px;
-        border-radius: 18px;
-        background: rgba(25, 135, 84, 0.15); 
-        color: #198754; 
-        display: grid;
-        place-items: center;
-        font-size: 2rem;
-    }
-
-    .admin-card {
+    .admin-card-content {
         background: #d1d5d6;
         border: 1px solid #c0c4c5;
         border-radius: 18px;
-        height: 100%;
-        color: #212529;
-        text-decoration: none;
-        transition: transform .2s, box-shadow .2s, border-color .2s;
-        display: block;
-    }
-
-    .admin-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        border-color: #198754; 
-        color: #212529;
-    }
-
-    .admin-card-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 14px;
-        display: grid;
-        place-items: center;
-        background: #212529;
-        color: #198754; 
-        font-size: 1.5rem;
     }
 
     .admin-muted { color: #6c757d; }
-
-    .admin-status {
-        display: inline-block;
-        background: rgba(25, 135, 84, .15);
-        color: #198754;
-        border-radius: 30px;
-        padding: 6px 12px;
-        font-size: .78rem;
-        font-weight: 600;
-    }
-
+    
     .admin-logout { color: #ffb3b9; }
     .admin-logout:hover { color: #ffffff; background: rgba(220, 53, 69, .22); }
 </style>
@@ -167,7 +119,7 @@
                     <i class="bi bi-journal-text"></i> Materias
                 </a>
                 
-                <a href="{{ route('admin.pagos') }}" class="admin-nav">
+                <a href="{{ route('admin.pagos') }}" class="admin-nav active" aria-current="page">
                     <i class="bi bi-cash-coin"></i> Pagos
                 </a>
 
@@ -186,25 +138,25 @@
                 <hr class="border-secondary my-3">
 
                 <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                    <button type="submit"
+                            class="admin-nav admin-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
 
             </nav>
         </aside>
@@ -220,6 +172,27 @@
             @if(session('success'))
                 <div class="alert alert-success fw-bold rounded-3 shadow-sm border-0 mb-4">
                     <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                        <span>Por favor, corrige los siguientes errores:</span>
+                    </div>
+
+                    <ul class="mb-0 ps-4">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                 </div>
             @endif
 

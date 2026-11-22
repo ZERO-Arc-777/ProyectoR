@@ -15,6 +15,8 @@ use App\Models\Configuracion;
 
 class DocenteController
 {
+    private const GRUPOS_PERMITIDOS = ['A', 'B'];
+
     // ==========================================
     // CONSULTAR DOCENTES
     // ==========================================
@@ -32,7 +34,8 @@ class DocenteController
                 $query->where(function ($q) use ($buscar) {
                     $q->where('numero_empleado', 'LIKE', "%{$buscar}%")
                         ->orWhere('nombres', 'LIKE', "%{$buscar}%")
-                        ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%");
+                        ->orWhere('apellido_paterno', 'LIKE', "%{$buscar}%")
+                        ->orWhere('curp', 'LIKE', "%{$buscar}%");
                 });
             })
             ->orderBy('id_docente', 'desc')
@@ -64,6 +67,36 @@ class DocenteController
             'admin.docentes.create',
             compact('usuarios', 'materias')
         );
+    }
+
+    // ==========================================
+    // NORMALIZAR ENTRADA
+    // ==========================================
+
+    private function normalizarEntrada(Request $request): void
+    {
+        $datosNormalizados = [
+            'curp' => strtoupper(
+                trim((string) $request->input('curp', ''))
+            ),
+        ];
+
+        if (is_array($request->input('grupos'))) {
+            $datosNormalizados['grupos'] = array_map(
+                function ($grupo) {
+                    if ($grupo === null) {
+                        return null;
+                    }
+
+                    $limpio = strtoupper(trim((string) $grupo));
+
+                    return $limpio === '' ? null : $limpio;
+                },
+                $request->input('grupos')
+            );
+        }
+
+        $request->merge($datosNormalizados);
     }
 
     // ==========================================
@@ -154,7 +187,7 @@ class DocenteController
             'grupos.*' => [
                 'nullable',
                 'string',
-                'max:10',
+                Rule::in(self::GRUPOS_PERMITIDOS),
             ],
         ];
     }
@@ -220,14 +253,14 @@ class DocenteController
             if ($grupo === '') {
                 throw ValidationException::withMessages([
                     "grupos.$indice" =>
-                        'Debes indicar un grupo para cada materia seleccionada.',
+                        'Debes seleccionar un grupo para cada materia asignada.',
                 ]);
             }
 
-            if (mb_strlen($grupo) > 10) {
+            if (!in_array($grupo, self::GRUPOS_PERMITIDOS, true)) {
                 throw ValidationException::withMessages([
                     "grupos.$indice" =>
-                        'El grupo no puede superar los 10 caracteres.',
+                        'El grupo seleccionado no es válido. Solo se permiten los grupos A o B.',
                 ]);
             }
 
@@ -280,11 +313,7 @@ class DocenteController
 
     public function store(Request $request)
     {
-        $request->merge([
-            'curp' => strtoupper(
-                trim((string) $request->input('curp', ''))
-            ),
-        ]);
+        $this->normalizarEntrada($request);
 
         $datos = $request->validate(
             $this->reglas(),
@@ -392,11 +421,7 @@ class DocenteController
 
     public function update(Request $request, $id)
     {
-        $request->merge([
-            'curp' => strtoupper(
-                trim((string) $request->input('curp', ''))
-            ),
-        ]);
+        $this->normalizarEntrada($request);
 
         $docente = Docente::where(
             'id_docente',

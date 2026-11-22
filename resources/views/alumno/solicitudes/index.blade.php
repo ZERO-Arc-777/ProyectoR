@@ -59,26 +59,27 @@
                     <i class="bi bi-cash-coin"></i> Trámites y Pagos
                 </a>
                 <hr class="border-secondary my-3">
-                <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                <!-- CERRAR SESIÓN SEGURO -->
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
+
+                    <button type="submit"
+                            class="alumno-nav alumno-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
             </nav>
         </aside>
 
@@ -100,6 +101,12 @@
                 </div>
             @endif
 
+            @if(session('error'))
+                <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+                </div>
+            @endif
+
             <div class="card alumno-card shadow-sm p-4">
                 <h5 class="fw-bold text-dark mb-4">
                     <i class="bi bi-receipt me-2 text-primary"></i> Historial de Solicitudes
@@ -111,6 +118,7 @@
                             <tr>
                                 <th>FOLIO</th>
                                 <th>FECHA DE SOLICITUD</th>
+                                <th>CONCEPTOS SOLICITADOS</th>
                                 <th class="text-end">TOTAL A PAGAR</th>
                                 <th class="text-center">ESTADO</th>
                             </tr>
@@ -125,6 +133,19 @@
                                         <i class="bi bi-calendar-event me-1"></i>
                                         {{ $solicitud->created_at->format('d/m/Y') }} 
                                         <small class="ms-1">{{ $solicitud->created_at->format('h:i A') }}</small>
+                                    </td>
+                                    <td>
+                                        <ul class="mb-0 ps-0 list-unstyled">
+                                            @forelse ($solicitud->detalles as $detalle)
+                                                <li>
+                                                    <i class="bi bi-dot text-primary"></i>
+                                                    {{ $detalle->servicio->concepto ?? 'Servicio no encontrado' }}
+                                                    <strong class="ms-1">${{ number_format($detalle->precio_cobrado, 2) }}</strong>
+                                                </li>
+                                            @empty
+                                                <li class="text-muted small">Sin conceptos registrados</li>
+                                            @endforelse
+                                        </ul>
                                     </td>
                                     <td class="text-end fw-bold fs-5 text-success">
                                         ${{ number_format($solicitud->total_pagar, 2) }}
@@ -147,7 +168,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-5">
+                                    <td colspan="5" class="text-center py-5">
                                         <i class="bi bi-receipt fs-1 text-muted opacity-50 d-block mb-2"></i>
                                         <span class="fw-bold text-muted">Aún no tienes solicitudes generadas.</span>
                                     </td>

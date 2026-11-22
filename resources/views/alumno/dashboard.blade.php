@@ -171,7 +171,7 @@
     @csrf
 
     <button type="submit"
-            class="admin-nav admin-logout"
+            class="alumno-nav alumno-logout"
             style="background: none;
                    border: none;
                    cursor: pointer;

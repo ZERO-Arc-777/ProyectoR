@@ -10,7 +10,7 @@ class Documento extends Model
     protected $primaryKey = 'id_documento';
 
     protected $fillable = [
-        'id_alumno', 'tipo_documento', 'proceso', 
+        'id_alumno', 'tipo_documento', 'proceso', 'periodo', 'semestre',
         'ruta_archivo', 'estado_validacion', 'observaciones'
     ];
 

@@ -11,6 +11,20 @@
 
 @section('contenido')
 
+@php
+    $horaActual = now()->hour;
+    $saludo = match (true) {
+        $horaActual < 12 => 'Buenos días',
+        $horaActual < 19 => 'Buenas tardes',
+        default => 'Buenas noches',
+    };
+
+    $pagosPendientes = \App\Models\Solicitud::where('estado', 'PENDIENTE')->count();
+    $documentosPendientes = \Illuminate\Support\Facades\DB::table('documentos')
+        ->where('estado_validacion', 'PENDIENTE')
+        ->count();
+@endphp
+
 <style>
     .admin-panel {
         min-height: 100vh;
@@ -187,25 +201,25 @@
                 <hr class="border-secondary my-3">
 
                 <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                    <button type="submit"
+                            class="admin-nav admin-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
 
             </nav>
 
@@ -215,7 +229,7 @@
 
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
-                    <h2 class="fw-bold mb-1 text-dark">Buenos días, {{ Auth::user()->nombre ?? 'ADMIN' }}</h2>
+                    <h2 class="fw-bold mb-1 text-dark">{{ $saludo }}, {{ Auth::user()->nombre ?? 'ADMIN' }}</h2>
                     <p class="admin-muted mb-0">Bienvenido al Sistema de Gestión Escolar</p>
                 </div>
                 <span class="admin-status">
@@ -291,10 +305,35 @@
                 <h6 class="fw-bold text-dark mb-3" style="border-bottom: 2px dashed #c0c4c5; padding-bottom: 8px; letter-spacing: 1px;">
                     ACTIVIDAD RECIENTE
                 </h6>
-                <div class="admin-muted small">
-                    <i class="bi bi-check-circle-fill text-success me-1"></i>
-                    <i>El sistema está funcionando correctamente. No hay alertas nuevas.</i>
-                </div>
+
+                @if ($pagosPendientes === 0 && $documentosPendientes === 0)
+                    <div class="admin-muted small">
+                        <i class="bi bi-check-circle-fill text-success me-1"></i>
+                        <span>No hay solicitudes de pago ni documentos pendientes de revisión.</span>
+                    </div>
+                @else
+                    <div class="d-flex flex-column gap-2 small">
+                        @if ($pagosPendientes > 0)
+                            <div>
+                                <i class="bi bi-clock-history text-warning me-1"></i>
+                                Tienes <strong>{{ $pagosPendientes }}</strong> {{ $pagosPendientes === 1 ? 'solicitud de pago pendiente' : 'solicitudes de pago pendientes' }}.
+                                <a href="{{ route('admin.pagos', ['estado' => 'PENDIENTE']) }}" class="text-success fw-bold text-decoration-none ms-1">
+                                    Revisar pagos
+                                </a>
+                            </div>
+                        @endif
+
+                        @if ($documentosPendientes > 0)
+                            <div>
+                                <i class="bi bi-file-earmark-text text-primary me-1"></i>
+                                Tienes <strong>{{ $documentosPendientes }}</strong> {{ $documentosPendientes === 1 ? 'documento pendiente' : 'documentos pendientes' }} de validación.
+                                <a href="{{ route('admin.revision.inscripciones') }}" class="text-success fw-bold text-decoration-none ms-1">
+                                    Ir a revisiones
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
 
         </main>

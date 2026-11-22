@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('titulo', 'GESTIÓN DE MATERIAS')
@@ -11,6 +10,64 @@
 @endsection
 
 @section('contenido')
+
+@php
+    $mesesLista = [
+        1 => 'Enero',
+        2 => 'Febrero',
+        3 => 'Marzo',
+        4 => 'Abril',
+        5 => 'Mayo',
+        6 => 'Junio',
+        7 => 'Julio',
+        8 => 'Agosto',
+        9 => 'Septiembre',
+        10 => 'Octubre',
+        11 => 'Noviembre',
+        12 => 'Diciembre',
+    ];
+
+    $mapaMeses = [
+        'enero' => 1, 'febrero' => 2, 'marzo' => 3, 'abril' => 4,
+        'mayo' => 5, 'junio' => 6, 'julio' => 7, 'agosto' => 8,
+        'septiembre' => 9, 'setiembre' => 9, 'octubre' => 10,
+        'noviembre' => 11, 'diciembre' => 12,
+    ];
+
+    $anioActualSistema = (int) now()->year;
+
+    $mesInicioDefault = 8;
+    $anioInicioDefault = $anioActualSistema;
+    $mesFinDefault = 12;
+    $anioFinDefault = $anioActualSistema;
+
+    if (!empty($periodoActual) && preg_match('/^([A-Za-záéíóúÁÉÍÓÚñÑ]+)\s+(\d{4})\s*-\s*([A-Za-záéíóúÁÉÍÓÚñÑ]+)\s+(\d{4})$/u', trim($periodoActual), $coincidencias)) {
+        $mIni = mb_strtolower($coincidencias[1], 'UTF-8');
+        $mFin = mb_strtolower($coincidencias[3], 'UTF-8');
+
+        if (isset($mapaMeses[$mIni], $mapaMeses[$mFin])) {
+            $mesInicioDefault = $mapaMeses[$mIni];
+            $anioInicioDefault = (int) $coincidencias[2];
+            $mesFinDefault = $mapaMeses[$mFin];
+            $anioFinDefault = (int) $coincidencias[4];
+        }
+    }
+
+    $mesInicioSel = (int) old('mes_inicio', $mesInicioDefault);
+    $anioInicioSel = (int) old('anio_inicio', $anioInicioDefault);
+    $mesFinSel = (int) old('mes_fin', $mesFinDefault);
+    $anioFinSel = (int) old('anio_fin', $anioFinDefault);
+
+    $aniosDisponibles = range($anioActualSistema - 5, $anioActualSistema + 5);
+    foreach ([$anioInicioSel, $anioFinSel] as $anioExtra) {
+        if ($anioExtra > 0 && !in_array($anioExtra, $aniosDisponibles, true)) {
+            $aniosDisponibles[] = $anioExtra;
+        }
+    }
+    sort($aniosDisponibles);
+
+    $mostrarConfirmacionPasado = $anioInicioSel < $anioActualSistema || session('requiere_confirmacion_pasado');
+@endphp
 
 <style>
     .admin-panel {
@@ -93,6 +150,26 @@
     .admin-form-card .card-header {
         border-radius: 0;
         border-bottom: 1px solid #343a40;
+    }
+
+    .periodo-activo-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(25, 135, 84, .22);
+        border: 1px solid rgba(25, 135, 84, .6);
+        color: #d1f7e5;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: .82rem;
+        font-weight: 600;
+    }
+
+    .periodo-preview-box {
+        background: #ffffff;
+        border: 1px solid #c0c4c5;
+        border-radius: 12px;
+        padding: 10px 14px;
     }
 </style>
 
@@ -185,15 +262,16 @@
 
                     <button type="submit"
                             class="admin-nav admin-logout"
-                            style="
-                                background: none;
-                                border: none;
-                                cursor: pointer;
-                                width: 100%;
-                                text-align: left;
-                                font: inherit;
-                                white-space: nowrap;
-                            ">
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
                         <i class="bi bi-power"></i>
                         <span>Cerrar sesión</span>
                     </button>
@@ -234,59 +312,144 @@
             @endif
 
             @if($errors->any())
-                <div class="alert alert-danger rounded-3 shadow-sm border-0 mb-4">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    {{ $errors->first() }}
+                <div class="alert alert-danger fw-bold rounded-3 shadow-sm border-0 mb-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                        <span>Revisa la configuración del periodo escolar:</span>
+                    </div>
+                    <ul class="mb-0 ps-4">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
             {{-- TARJETA 1: PERIODO ESCOLAR --}}
             <div class="card admin-form-card shadow-sm mb-4">
 
-                <div class="card-header bg-dark text-white py-3">
+                <div class="card-header bg-dark text-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <h6 class="fw-bold mb-0">
                         <i class="bi bi-calendar-range me-2"></i>
                         Configuración del Periodo Escolar
                     </h6>
+
+                    {{-- ETIQUETA FIJA DE SOLO LECTURA CON EL PERIODO ESTABLECIDO --}}
+                    <span class="periodo-activo-pill">
+                        <i class="bi bi-lock-fill"></i>
+                        Periodo activo: {{ $periodoActual ?: 'Sin definir' }}
+                    </span>
                 </div>
 
                 <div class="card-body p-4">
 
                     <form action="{{ route('admin.materias.periodo') }}"
-                          method="POST">
+                          method="POST"
+                          id="formPeriodoEscolar">
                         @csrf
 
-                        <div class="row align-items-end g-3">
+                        <div class="row g-3 align-items-end">
 
-                            <div class="col-12 col-md-8">
-
-                                <label for="periodo_actual"
-                                       class="form-label fw-bold text-dark">
-                                    Periodo escolar actual
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <label for="mes_inicio" class="form-label fw-bold text-dark small mb-1">
+                                    Mes de inicio
                                 </label>
-
-                                <input type="text"
-                                       name="periodo_actual"
-                                       id="periodo_actual"
-                                       class="form-control border-0 shadow-sm"
-                                       value="{{ old('periodo_actual', $periodoActual ?? '') }}"
-                                       placeholder="Ej. AGOSTO 2026 - ENERO 2027"
-                                       maxlength="255"
-                                       required>
-
+                                <select name="mes_inicio"
+                                        id="mes_inicio"
+                                        class="form-select border-0 shadow-sm"
+                                        required>
+                                    @foreach($mesesLista as $numMes => $nombreMes)
+                                        <option value="{{ $numMes }}" {{ $mesInicioSel === $numMes ? 'selected' : '' }}>
+                                            {{ $nombreMes }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-sm-6 col-lg-2">
+                                <label for="anio_inicio" class="form-label fw-bold text-dark small mb-1">
+                                    Año de inicio
+                                </label>
+                                <select name="anio_inicio"
+                                        id="anio_inicio"
+                                        class="form-select border-0 shadow-sm"
+                                        required>
+                                    @foreach($aniosDisponibles as $anio)
+                                        <option value="{{ $anio }}" {{ $anioInicioSel === $anio ? 'selected' : '' }}>
+                                            {{ $anio }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <label for="mes_fin" class="form-label fw-bold text-dark small mb-1">
+                                    Mes de fin
+                                </label>
+                                <select name="mes_fin"
+                                        id="mes_fin"
+                                        class="form-select border-0 shadow-sm"
+                                        required>
+                                    @foreach($mesesLista as $numMes => $nombreMes)
+                                        <option value="{{ $numMes }}" {{ $mesFinSel === $numMes ? 'selected' : '' }}>
+                                            {{ $nombreMes }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-sm-6 col-lg-2">
+                                <label for="anio_fin" class="form-label fw-bold text-dark small mb-1">
+                                    Año de fin
+                                </label>
+                                <select name="anio_fin"
+                                        id="anio_fin"
+                                        class="form-select border-0 shadow-sm"
+                                        required>
+                                    @foreach($aniosDisponibles as $anio)
+                                        <option value="{{ $anio }}" {{ $anioFinSel === $anio ? 'selected' : '' }}>
+                                            {{ $anio }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-lg-2">
                                 <button type="submit"
-                                        class="btn btn-success fw-bold px-4 w-100 shadow-sm">
+                                        id="btnActualizarPeriodo"
+                                        class="btn btn-success fw-bold px-3 w-100 shadow-sm">
                                     <i class="bi bi-save me-1"></i>
-                                    Actualizar Periodo
+                                    Actualizar
                                 </button>
-
                             </div>
 
                         </div>
+
+                        {{-- VISTA PREVIA DEL RANGO Y VALIDACIÓN VISUAL --}}
+                        <div class="periodo-preview-box d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 shadow-sm">
+                            <div class="small text-dark">
+                                <span class="text-muted">Nuevo periodo seleccionado:</span>
+                                <strong id="previewPeriodoTexto" class="ms-1"></strong>
+                            </div>
+                            <span id="previewPeriodoDuracion" class="badge rounded-pill px-3 py-2"></span>
+                        </div>
+
+                        {{-- CONFIRMACIÓN PARA PERIODOS DE AÑOS ANTERIORES --}}
+                        <div id="bloqueConfirmacionPasado"
+                             class="alert alert-warning border-0 rounded-3 shadow-sm mt-3 mb-0 {{ $mostrarConfirmacionPasado ? '' : 'd-none' }}">
+                            <div class="form-check">
+                                <input class="form-check-input border-secondary"
+                                       type="checkbox"
+                                       value="1"
+                                       id="confirmar_periodo_pasado"
+                                       name="confirmar_periodo_pasado"
+                                       {{ old('confirmar_periodo_pasado') ? 'checked' : '' }}>
+                                <label class="form-check-label fw-bold text-dark small" for="confirmar_periodo_pasado">
+                                    Confirmo que deseo establecer un periodo correspondiente a un año anterior al actual ({{ $anioActualSistema }}).
+                                </label>
+                            </div>
+                        </div>
+
                     </form>
 
                 </div>
@@ -455,5 +618,62 @@
 
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const mesInicioEl = document.getElementById('mes_inicio');
+        const anioInicioEl = document.getElementById('anio_inicio');
+        const mesFinEl = document.getElementById('mes_fin');
+        const anioFinEl = document.getElementById('anio_fin');
+        const previewTextoEl = document.getElementById('previewPeriodoTexto');
+        const previewDuracionEl = document.getElementById('previewPeriodoDuracion');
+        const bloquePasadoEl = document.getElementById('bloqueConfirmacionPasado');
+        const checkPasadoEl = document.getElementById('confirmar_periodo_pasado');
+        const anioActualSistema = {{ $anioActualSistema }};
+
+        const nombresMeses = {
+            1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+            5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+            9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+        };
+
+        const actualizarVistaPrevia = function () {
+            const mIni = parseInt(mesInicioEl.value, 10);
+            const aIni = parseInt(anioInicioEl.value, 10);
+            const mFin = parseInt(mesFinEl.value, 10);
+            const aFin = parseInt(anioFinEl.value, 10);
+
+            previewTextoEl.textContent = `${nombresMeses[mIni]} ${aIni} - ${nombresMeses[mFin]} ${aFin}`;
+
+            const inicioTotal = (aIni * 12) + mIni;
+            const finTotal = (aFin * 12) + mFin;
+            const duracion = (finTotal - inicioTotal) + 1;
+
+            if (finTotal <= inicioTotal) {
+                previewDuracionEl.className = 'badge rounded-pill px-3 py-2 bg-danger';
+                previewDuracionEl.textContent = 'La fecha final debe ser posterior a la inicial';
+            } else if (duracion < 4 || duracion > 6) {
+                previewDuracionEl.className = 'badge rounded-pill px-3 py-2 bg-danger';
+                previewDuracionEl.textContent = `Duración fuera de rango (${duracion} meses · permitido: 4 a 6)`;
+            } else {
+                previewDuracionEl.className = 'badge rounded-pill px-3 py-2 bg-success';
+                previewDuracionEl.textContent = `Duración válida: ${duracion} meses`;
+            }
+
+            if (aIni < anioActualSistema) {
+                bloquePasadoEl.classList.remove('d-none');
+            } else {
+                bloquePasadoEl.classList.add('d-none');
+                checkPasadoEl.checked = false;
+            }
+        };
+
+        [mesInicioEl, anioInicioEl, mesFinEl, anioFinEl].forEach(function (selectEl) {
+            selectEl.addEventListener('change', actualizarVistaPrevia);
+        });
+
+        actualizarVistaPrevia();
+    });
+</script>
 
 @endsection

@@ -185,9 +185,26 @@
                     <i class="bi bi-person-badge-fill"></i> Mi Perfil
                 </a>
                 <hr class="border-secondary my-3">
-                <a href="{{ route('logout') }}" class="grupos-nav text-danger">
-                    <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-                </a>
+                <!-- CERRAR SESIÓN SEGURO -->
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
+
+                    <button type="submit"
+                            class="grupos-nav text-danger"
+                            style="background: none;
+                                border: none;
+                                cursor: pointer;
+                                width: 100%;
+                                text-align: left;
+                                font: inherit;
+                                display: flex;
+                                align-items: center;
+                                gap: 12px;
+                                white-space: nowrap;">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
             </nav>
         </aside>
 

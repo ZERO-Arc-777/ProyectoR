@@ -11,19 +11,25 @@ class MateriaAController
 {
     public function index()
     {
-        // 1. Identificamos al alumno logueado
-        $alumno = Alumno::where('id_usuario', Auth::id())->firstOrFail();
+        // Identificar al alumno autenticado.
+        $alumno = Alumno::where('id_usuario', Auth::id())
+            ->firstOrFail();
 
-        // 2. Traemos todas las materias del 1er al 6to semestre y las agrupamos mágicamente por semestre
+        // Consultar las materias activas del 1° al 6° semestre agrupadas por semestre.
         $materias = Materia::where('estado', 'ACTIVA')
             ->whereBetween('semestre', [1, 6])
+            ->orderBy('nombre', 'asc')
             ->get()
             ->groupBy('semestre');
 
-        // 3. Traemos solo las calificaciones de este alumno.
+        // Obtener sus calificaciones indexadas por id_materia (conservando la más reciente).
         $calificaciones = Calificacion::where('id_alumno', $alumno->id_alumno)
+            ->orderBy('id_calificacion', 'asc')
             ->pluck('calificacion', 'id_materia');
 
-        return view('alumno.materias.index', compact('materias', 'calificaciones', 'alumno'));
+        return view(
+            'alumno.materias.index',
+            compact('alumno', 'materias', 'calificaciones')
+        );
     }
 }

@@ -4,253 +4,200 @@ namespace App\Http\Controllers\Alumno;
 
 use App\Models\Alumno;
 use App\Models\Documento;
-use Illuminate\Database\QueryException;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class DocumentoController
 {
-    // ==========================================
-    // CONSULTAR DOCUMENTOS DEL ALUMNO
-    // ==========================================
+    /**
+     * Catálogo único de trámites y documentos permitidos por regla académica.
+     */
+    private function catalogoProcesos(): array
+    {
+        return [
+            'INSCRIPCION' => [
+                'titulo' => 'Nuevo Ingreso (Inscripción)',
+                'descripcion' => 'Documentos iniciales de tu expediente. Disponibles hasta ser aprobados por Control Escolar.',
+                'icono' => 'bi-person-plus-fill',
+                'semestre_minimo' => 1,
+                'etiqueta_bloqueo' => 'Disponible desde 1° semestre',
+                'por_semestre' => false,
+                'documentos' => [
+                    'CURP',
+                    'Acta de Nacimiento',
+                    'Certificado de Secundaria',
+                ],
+            ],
+            'REINSCRIPCION' => [
+                'titulo' => 'Pase de Semestre (Reinscripción)',
+                'descripcion' => 'Actualización semestral requerida de 2° a 6° semestre. Se reactiva automáticamente al avanzar de semestre.',
+                'icono' => 'bi-arrow-repeat',
+                'semestre_minimo' => 2,
+                'etiqueta_bloqueo' => 'Disponible a partir de 2° semestre',
+                'por_semestre' => true,
+                'documentos' => [
+                    'CURP actualizada',
+                    'Acta de Nacimiento actualizada',
+                ],
+            ],
+            'EGRESO' => [
+                'titulo' => 'Trámites Finales (Egreso)',
+                'descripcion' => 'Documentación de cierre habilitada al cursar 6° semestre.',
+                'icono' => 'bi-mortarboard-fill',
+                'semestre_minimo' => 6,
+                'etiqueta_bloqueo' => 'Disponible en 6° semestre',
+                'por_semestre' => false,
+                'documentos' => [
+                    'Certificado de Preparatoria',
+                ],
+            ],
+        ];
+    }
 
     public function index()
     {
-        // Obtener únicamente el alumno autenticado.
-        $alumno = Alumno::where(
-            'id_usuario',
-            Auth::id()
-        )->firstOrFail();
+        $alumno = Alumno::where('id_usuario', Auth::user()->id_usuario)
+            ->firstOrFail();
 
-        // Consultar sus documentos ordenados por fecha.
-        $documentos = Documento::where(
-            'id_alumno',
-            $alumno->id_alumno
-        )
-            ->orderBy('created_at', 'desc')
+        $semestreActual = (int) $alumno->semestre;
+
+        $documentos = Documento::where('id_alumno', $alumno->id_alumno)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id_documento')
             ->get();
 
-        return view(
-            'alumno.documentos.index',
-            compact('alumno', 'documentos')
-        );
-    }
+        $secciones = [];
 
-    // ==========================================
-    // SUBIR O REEMPLAZAR DOCUMENTO
-    // ==========================================
+        foreach ($this->catalogoProcesos() as $claveProceso => $config) {
+            $habilitadoPorSemestre = $semestreActual >= $config['semestre_minimo'];
+            $tarjetas = [];
+
+            foreach ($config['documentos'] as $tipoDocumento) {
+                $registro = $documentos->first(function ($doc) use ($claveProceso, $tipoDocumento, $config, $semestreActual) {
+                    if ($doc->proceso !== $claveProceso || $doc->tipo_documento !== $tipoDocumento) {
+                        return false;
+                    }
+
+                    if ($config['por_semestre']) {
+                        return (int) $doc->semestre === $semestreActual;
+                    }
+
+                    return true;
+                });
+
+                if (!$habilitadoPorSemestre) {
+                    $estadoTarjeta = 'BLOQUEADO';
+                } elseif (!$registro) {
+                    $estadoTarjeta = 'DISPONIBLE';
+                } else {
+                    $estadoTarjeta = $registro->estado_validacion; // PENDIENTE, APROBADO o RECHAZADO
+                }
+
+                $tarjetas[] = [
+                    'proceso' => $claveProceso,
+                    'tipo_documento' => $tipoDocumento,
+                    'estado' => $estadoTarjeta,
+                    'puede_subir' => in_array($estadoTarjeta, ['DISPONIBLE', 'RECHAZADO'], true),
+                    'registro' => $registro,
+                ];
+            }
+
+            $secciones[] = [
+                'clave' => $claveProceso,
+                'titulo' => $config['titulo'],
+                'descripcion' => $config['descripcion'],
+                'icono' => $config['icono'],
+                'habilitado' => $habilitadoPorSemestre,
+                'etiqueta_bloqueo' => $config['etiqueta_bloqueo'],
+                'por_semestre' => $config['por_semestre'],
+                'tarjetas' => $tarjetas,
+            ];
+        }
+
+        return view('alumno.documentos.index', compact('alumno', 'documentos', 'secciones'));
+    }
 
     public function store(Request $request)
     {
-        // Validar los datos y el archivo recibido.
+        $alumno = Alumno::where('id_usuario', Auth::user()->id_usuario)
+            ->firstOrFail();
+
+        $catalogo = $this->catalogoProcesos();
+
         $datos = $request->validate([
-            'tipo_documento' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-            'proceso' => [
-                'required',
-                'in:INSCRIPCION,REINSCRIPCION,EGRESO',
-            ],
-            'archivo' => [
-                'required',
-                'mimes:pdf',
-                'max:2048',
-            ],
+            'proceso' => ['required', 'string', Rule::in(array_keys($catalogo))],
+            'tipo_documento' => ['required', 'string', 'max:100'],
+            'archivo' => ['required', 'file', 'mimes:pdf', 'max:2048'],
+        ], [
+            'archivo.required' => 'Debes seleccionar un archivo PDF antes de enviar.',
+            'archivo.mimes' => 'El documento debe estar en formato PDF.',
+            'archivo.max' => 'El archivo no debe superar los 2 MB.',
         ]);
 
-        // Identificar al alumno autenticado.
-        $alumno = Alumno::where(
-            'id_usuario',
-            Auth::id()
-        )->firstOrFail();
+        $proceso = $datos['proceso'];
+        $tipoDocumento = $datos['tipo_documento'];
+        $config = $catalogo[$proceso];
+        $semestreActual = (int) $alumno->semestre;
 
-        // Guardar el PDF en almacenamiento privado.
-        $rutaNueva = $request->file('archivo')->store(
-            'expedientes/' . $alumno->matricula,
-            'local'
-        );
-
-        if (!$rutaNueva) {
-            throw new \RuntimeException(
-                'No se pudo almacenar el nuevo documento PDF.'
-            );
+        // 1. Validar que el semestre del alumno permita este trámite
+        if ($semestreActual < $config['semestre_minimo']) {
+            return redirect()
+                ->back()
+                ->with('error', "El trámite {$config['titulo']} aún no está habilitado para tu semestre actual ({$semestreActual}°).");
         }
 
-        try {
-            // Proteger las operaciones mediante una transacción.
-            $resultado = DB::transaction(
-                function () use ($alumno, $datos, $rutaNueva) {
+        // 2. Validar que el documento pertenezca al trámite seleccionado
+        if (!in_array($tipoDocumento, $config['documentos'], true)) {
+            return redirect()
+                ->back()
+                ->with('error', 'El tipo de documento seleccionado no corresponde a este trámite.');
+        }
 
-                    // Bloquear el registro mientras se consulta.
-                    $documentoExistente = Documento::where(
-                        'id_alumno',
-                        $alumno->id_alumno
-                    )
-                        ->where(
-                            'tipo_documento',
-                            $datos['tipo_documento']
-                        )
-                        ->where(
-                            'proceso',
-                            $datos['proceso']
-                        )
-                        ->lockForUpdate()
-                        ->first();
+        // 3. Bloqueo anti-spam y protección de documentos ya aprobados
+        $consultaExistente = Documento::where('id_alumno', $alumno->id_alumno)
+            ->where('proceso', $proceso)
+            ->where('tipo_documento', $tipoDocumento);
 
-                    // No permitir reemplazar documentos
-                    // pendientes o aprobados.
-                    if (
-                        $documentoExistente &&
-                        in_array(
-                            $documentoExistente->estado_validacion,
-                            ['PENDIENTE', 'APROBADO'],
-                            true
-                        )
-                    ) {
-                        return [
-                            'permitido' => false,
-                            'ruta_anterior' => null,
-                            'estado' =>
-                                $documentoExistente->estado_validacion,
-                        ];
-                    }
+        if ($config['por_semestre']) {
+            $consultaExistente->where('semestre', $semestreActual);
+        }
 
-                    $rutaAnterior = null;
+        $ultimoDocumento = $consultaExistente
+            ->orderByDesc('created_at')
+            ->orderByDesc('id_documento')
+            ->first();
 
-                    if ($documentoExistente) {
-                        // Conservar la ruta del archivo anterior.
-                        $rutaAnterior =
-                            $documentoExistente->ruta_archivo;
-
-                        // Reemplazar únicamente el documento
-                        // que anteriormente fue rechazado.
-                        $documentoExistente->update([
-                            'ruta_archivo' => $rutaNueva,
-                            'estado_validacion' => 'PENDIENTE',
-                            'observaciones' => null,
-                        ]);
-                    } else {
-                        // Crear un registro nuevo.
-                        // El índice único previene duplicados.
-                        Documento::create([
-                            'id_alumno' =>
-                                $alumno->id_alumno,
-                            'tipo_documento' =>
-                                $datos['tipo_documento'],
-                            'proceso' =>
-                                $datos['proceso'],
-                            'ruta_archivo' =>
-                                $rutaNueva,
-                            'estado_validacion' =>
-                                'PENDIENTE',
-                        ]);
-                    }
-
-                    return [
-                        'permitido' => true,
-                        'ruta_anterior' => $rutaAnterior,
-                        'estado' => null,
-                    ];
-                },
-                3
-            );
-
-        } catch (UniqueConstraintViolationException $e) {
-
-            // Eliminar el archivo nuevo si el registro
-            // no pudo completarse por un duplicado.
-            Storage::disk('local')->delete($rutaNueva);
-
-            $duplicado = Documento::where(
-                'id_alumno',
-                $alumno->id_alumno
-            )
-                ->where(
-                    'tipo_documento',
-                    $datos['tipo_documento']
-                )
-                ->where(
-                    'proceso',
-                    $datos['proceso']
-                )
-                ->exists();
-
-            if ($duplicado) {
-                return back()->withErrors([
-                    'archivo' =>
-                        'Este documento ya fue registrado. ' .
-                        'Actualiza tu expediente antes de volver a intentarlo.',
-                ]);
+        if ($ultimoDocumento) {
+            if ($ultimoDocumento->estado_validacion === 'PENDIENTE') {
+                return redirect()
+                    ->back()
+                    ->with('error', "Ya enviaste \"{$tipoDocumento}\" y se encuentra en revisión. Espera respuesta de Control Escolar.");
             }
 
-            throw $e;
-
-        } catch (QueryException $e) {
-
-            // Eliminar el archivo nuevo si falla la transacción.
-            Storage::disk('local')->delete($rutaNueva);
-
-            // Identificar el error 1205 de MariaDB:
-            // tiempo de espera del bloqueo.
-            if (
-                ($e->errorInfo[0] ?? null) === 'HY000' &&
-                (int) ($e->errorInfo[1] ?? 0) === 1205
-            ) {
-                return back()->withErrors([
-                    'archivo' =>
-                        'El documento está siendo procesado ' .
-                        'por otra solicitud. Intenta nuevamente ' .
-                        'en unos momentos.',
-                ]);
+            if ($ultimoDocumento->estado_validacion === 'APROBADO') {
+                return redirect()
+                    ->back()
+                    ->with('error', "\"{$tipoDocumento}\" ya fue aprobado para este proceso.");
             }
-
-            // No ocultar otros errores de base de datos.
-            throw $e;
-
-        } catch (\Throwable $e) {
-
-            // Limpiar el archivo ante cualquier otro error.
-            Storage::disk('local')->delete($rutaNueva);
-
-            throw $e;
         }
 
-        // ==========================================
-        // COMPROBAR RESULTADO
-        // ==========================================
+        // 4. Guardar archivo PDF
+        // VERIFICA QUE EL DISCO ('local'/'public') Y LA COLUMNA ('ruta_archivo') COINCIDAN CON TU RUTA documentos.ver
+        $rutaArchivo = $request->file('archivo')->store('expedientes/' . $alumno->matricula, 'local');
 
-        // Si el documento ya estaba pendiente o aprobado,
-        // eliminar únicamente el archivo recién subido.
-        if (!$resultado['permitido']) {
-            Storage::disk('local')->delete($rutaNueva);
+        Documento::create([
+            'id_alumno' => $alumno->id_alumno,
+            'proceso' => $proceso,
+            'semestre' => $semestreActual,
+            'tipo_documento' => $tipoDocumento,
+            'ruta_archivo' => $rutaArchivo,
+            'estado_validacion' => 'PENDIENTE',
+            'observaciones' => null,
+        ]);
 
-            return back()->withErrors([
-                'archivo' =>
-                    'Ya subiste este documento y se encuentra ' .
-                    strtolower($resultado['estado']) .
-                    '. No puedes subirlo de nuevo.',
-            ]);
-        }
-
-        // Eliminar el archivo anterior únicamente
-        // después de confirmar la transacción.
-        $rutaAnterior = $resultado['ruta_anterior'];
-
-        if (
-            $rutaAnterior &&
-            $rutaAnterior !== $rutaNueva
-        ) {
-            Storage::disk('local')->delete($rutaAnterior);
-        }
-
-        return back()->with(
-            'success',
-            'Documento subido correctamente. Esperando revisión.'
-        );
+        return redirect()
+            ->route('alumno.documentos')
+            ->with('success', "El documento \"{$tipoDocumento}\" fue enviado correctamente a revisión.");
     }
 }

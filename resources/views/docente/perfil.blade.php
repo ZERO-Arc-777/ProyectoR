@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('titulo', 'Mi Perfil')
@@ -16,13 +15,13 @@
     $usuario = Auth::user();
     $docente = $docente ?? null;
 
-    // Obtener solamente los grupos asignados al docente.
+    // Obtener solamente los grupos asignados al docente desde asignaciones_academicas.
     $asignaciones = $docente
-        ? $docente->asignacionesGrupos()
-            ->with(['materia', 'periodo'])
-            ->orderBy('semestre')
+        ? $docente->asignacionesAcademicas()
+            ->with('materia')
             ->orderBy('grupo')
             ->get()
+            ->sortBy(fn ($a) => sprintf('%02d-%s', $a->materia?->semestre ?? 99, $a->grupo))
         : collect();
 @endphp
 
@@ -268,12 +267,26 @@
 
                 <hr class="border-secondary my-3">
 
-                <!-- CERRAR SESIÓN -->
-                <a href="{{ route('logout') }}"
-                   class="perfil-nav text-danger">
-                    <i class="bi bi-box-arrow-right"></i>
-                    Cerrar sesión
-                </a>
+                <!-- CERRAR SESIÓN SEGURO -->
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
+
+                    <button type="submit"
+                            class="perfil-nav text-danger"
+                            style="background: none;
+                                border: none;
+                                cursor: pointer;
+                                width: 100%;
+                                text-align: left;
+                                font: inherit;
+                                display: flex;
+                                align-items: center;
+                                gap: 12px;
+                                white-space: nowrap;">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
 
             </nav>
 
@@ -558,7 +571,7 @@
                                         <i class="bi bi-people-fill me-2"></i>
 
                                         Grupo
-                                        {{ $asignacion->semestre }}°
+                                        {{ $asignacion->materia?->semestre ?? '-' }}°
                                         {{ $asignacion->grupo }}
 
                                     </h5>
@@ -577,25 +590,24 @@
 
                                         <strong>Periodo escolar:</strong>
 
-                                        {{ $asignacion->periodo?->nombre ?? 'No registrado' }}
+                                        {{ $asignacion->periodo ?? 'No registrado' }}
 
                                     </p>
 
-                                    
-<!-- BOTÓN DE DESCARGA DE ASISTENCIA -->
-<a
-    href="{{ route('docente.lista-asistencia', ['asignacion' => $asignacion->id_asignacion]) }}"
-    class="perfil-descargar"
-    title="Descargar lista de asistencia"
->
-    <i class="bi bi-download"></i>
-    Descargar lista
-</a>
+                                    <!-- BOTÓN DE DESCARGA DE ASISTENCIA -->
+                                    <a
+                                        href="{{ route('docente.lista-asistencia', ['asignacion' => $asignacion->id_asignacion]) }}"
+                                        class="perfil-descargar"
+                                        title="Descargar lista de asistencia"
+                                    >
+                                        <i class="bi bi-download"></i>
+                                        Descargar lista
+                                    </a>
 
-<small class="d-block perfil-muted mt-2">
-    Descarga la lista de asistencia de este grupo
-    en formato CSV compatible con Excel.
-</small>
+                                    <small class="d-block perfil-muted mt-2">
+                                        Descarga la lista de asistencia de este grupo
+                                        en formato CSV compatible con Excel.
+                                    </small>
 
                                 </div>
 

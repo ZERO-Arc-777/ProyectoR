@@ -163,25 +163,25 @@
                 <hr class="border-secondary my-3">
 
                 <!-- CERRAR SESIÓN SEGURO -->
-<form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
-    @csrf
+                <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
+                    @csrf
 
-    <button type="submit"
-            class="admin-nav admin-logout"
-            style="background: none;
-                   border: none;
-                   cursor: pointer;
-                   width: 100%;
-                   text-align: left;
-                   font: inherit;
-                   display: flex;
-                   align-items: center;
-                   gap: 12px;
-                   white-space: nowrap;">
-        <i class="bi bi-power"></i>
-        <span>Cerrar sesión</span>
-    </button>
-</form>
+                    <button type="submit"
+                            class="admin-nav admin-logout"
+                            style="background: none;
+                                   border: none;
+                                   cursor: pointer;
+                                   width: 100%;
+                                   text-align: left;
+                                   font: inherit;
+                                   display: flex;
+                                   align-items: center;
+                                   gap: 12px;
+                                   white-space: nowrap;">
+                        <i class="bi bi-power"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
 
             </nav>
         </aside>
@@ -235,7 +235,7 @@
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Número de Empleado</label>
-                                <input type="text" name="numero_empleado" class="form-control border-0 shadow-sm fw-bold" value="{{ old('numero_empleado') }}" required>
+                                <input type="text" name="numero_empleado" class="form-control border-0 shadow-sm fw-bold" maxlength="20" value="{{ old('numero_empleado') }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
@@ -245,24 +245,23 @@
 
                             <div class="col-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Nombre(s)</label>
-                                <input type="text" name="nombres" class="form-control border-0 shadow-sm" value="{{ old('nombres') }}" required>
+                                <input type="text" name="nombres" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('nombres') }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Apellido Paterno</label>
-                                <input type="text" name="apellido_paterno" class="form-control border-0 shadow-sm" value="{{ old('apellido_paterno') }}" required>
+                                <input type="text" name="apellido_paterno" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('apellido_paterno') }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Apellido Materno</label>
-                                <input type="text" name="apellido_materno" class="form-control border-0 shadow-sm" value="{{ old('apellido_materno') }}">
+                                <input type="text" name="apellido_materno" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('apellido_materno') }}">
                             </div>
 
                             <div class="col-12 mb-4 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Cédula Profesional <span class="text-muted fw-normal">(Opcional)</span></label>
-                                <input type="text" name="cedula_profesional" class="form-control border-0 shadow-sm" value="{{ old('cedula_profesional') }}">
+                                <input type="text" name="cedula_profesional" class="form-control border-0 shadow-sm" maxlength="50" value="{{ old('cedula_profesional') }}">
                             </div>
-                            
                         </div>
 
                         <div class="col-12 mb-2 text-start">
@@ -271,12 +270,14 @@
 
                         <div id="contenedor-materias">
                             @php
-                                // Usa la lógica correspondiente según la vista (create o editorD)
                                 $materiasSeleccionadas = old('materias', ['']);
                                 $gruposSeleccionados = old('grupos', ['A']);
                             @endphp
 
                             @foreach($materiasSeleccionadas as $index => $materiaSeleccionada)
+                                @php
+                                    $grupoActual = strtoupper(trim((string) ($gruposSeleccionados[$index] ?? 'A')));
+                                @endphp
                                 <div class="materia-row">
                                     <div class="row align-items-end">
                                         <div class="col-md-8 mb-2">
@@ -293,7 +294,10 @@
                                         
                                         <div class="col-md-3 col-8 mb-2">
                                             <label class="fw-bold text-dark mb-1">Grupo</label>
-                                            <input type="text" name="grupos[]" class="form-control border-0 shadow-sm text-uppercase" value="{{ $gruposSeleccionados[$index] ?? 'A' }}" maxlength="10" placeholder="Ej. A">
+                                            <select name="grupos[]" class="form-select border-0 shadow-sm fw-bold">
+                                                <option value="A" {{ $grupoActual === 'A' ? 'selected' : '' }}>Grupo A</option>
+                                                <option value="B" {{ $grupoActual === 'B' ? 'selected' : '' }}>Grupo B</option>
+                                            </select>
                                         </div>
                                         
                                         <div class="col-md-1 col-4 mb-2">
@@ -357,7 +361,10 @@
                         
                         <div class="col-md-3 col-8 mb-2">
                             <label class="fw-bold text-dark mb-1">Grupo</label>
-                            <input type="text" name="grupos[]" class="form-control border-0 shadow-sm text-uppercase" maxlength="10" value="A" placeholder="Ej. A">
+                            <select name="grupos[]" class="form-select border-0 shadow-sm fw-bold">
+                                <option value="A" selected>Grupo A</option>
+                                <option value="B">Grupo B</option>
+                            </select>
                         </div>
                         
                         <div class="col-md-1 col-4 mb-2">
@@ -373,14 +380,12 @@
         });
 
         $(document).on('click', '.btn-eliminar-materia', function () {
-
             if ($('.materia-row').length > 1) {
                 $(this).closest('.materia-row').remove();
             } else {
-                $(this).closest('.materia-row').find('select').val('');
-                $(this).closest('.materia-row').find('input').val('A');
+                $(this).closest('.materia-row').find('select[name="materias[]"]').val('');
+                $(this).closest('.materia-row').find('select[name="grupos[]"]').val('A');
             }
-
         });
 
     });

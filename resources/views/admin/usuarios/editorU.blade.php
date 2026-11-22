@@ -168,12 +168,12 @@
                         <div class="row">
                             <div class="col-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Nombre Completo</label>
-                                <input type="text" name="nombre" class="form-control border-0 shadow-sm" value="{{ old('nombre', $usuario->nombre) }}" required>
+                                <input type="text" name="nombre" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('nombre', $usuario->nombre) }}" required>
                             </div>
 
                             <div class="col-12 mb-3 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Correo Electrónico</label>
-                                <input type="email" name="correo" class="form-control border-0 shadow-sm" value="{{ old('correo', $usuario->correo) }}" required>
+                                <input type="email" name="correo" class="form-control border-0 shadow-sm" maxlength="100" value="{{ old('correo', $usuario->correo) }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3 text-start">
@@ -197,14 +197,8 @@
 
                             <div class="col-12 mb-4 text-start">
                                 <label class="fw-bold text-dark mb-1 ms-1">Nueva Contraseña <small class="text-danger fw-normal">(Opcional)</small></label>
-<input type="password"
-       name="password"
-       class="form-control border-0 shadow-sm"
-       placeholder="Dejar en blanco para mantener la actual (mínimo 12 caracteres)"
-       minlength="12"
-       maxlength="255"
-       autocomplete="new-password">                            </div>
-                        </div>
+                                <input type="password" name="password" class="form-control border-0 shadow-sm" placeholder="Dejar en blanco para mantener la actual (mínimo 12 caracteres)" minlength="12" maxlength="255" autocomplete="new-password">                            </div>
+                            </div>
 
                         <div class="d-flex justify-content-end mt-2 gap-3">
                             <a href="{{ route('admin.usuarios') }}" class="btn btn-outline-dark fw-bold px-4 shadow-sm">Cancelar</a>
