@@ -44,9 +44,12 @@ class MateriaDController
             ->orderBy('nombres')
             ->get();
 
+        // Se envía el registro completo indexado por id_alumno para leer los 3 parciales, eval. final y promedio.
         $calificacionesPrevias = Calificacion::where('id_materia', $asignacion->id_materia)
             ->where('periodo', $periodoActual)
-            ->pluck('calificacion', 'id_alumno');
+            ->whereIn('id_alumno', $alumnos->pluck('id_alumno'))
+            ->get()
+            ->keyBy('id_alumno');
 
         return view('docente.calificar', compact('asignacion', 'alumnos', 'periodoActual', 'calificacionesPrevias'));
     }
@@ -63,25 +66,81 @@ class MateriaDController
             ->firstOrFail();
 
         $request->validate([
-            'calificaciones'   => 'required|array',
-            'calificaciones.*' => 'nullable|numeric|min:0|max:10',
+            'calificaciones'              => ['nullable', 'array'],
+            'calificaciones.*.calif_1'    => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'calificaciones.*.calif_2'    => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'calificaciones.*.calif_3'    => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'calificaciones.*.eval_final' => ['nullable', 'numeric', 'min:0', 'max:10'],
+        ], [
+            'calificaciones.*.*.numeric' => 'Todas las calificaciones deben ser valores numéricos.',
+            'calificaciones.*.*.min'     => 'La calificación mínima permitida es 0.',
+            'calificaciones.*.*.max'     => 'La calificación máxima permitida es 10.',
         ]);
 
-        foreach ($request->calificaciones as $id_alumno => $nota) {
-            if ($nota !== null && $nota !== '') {
+        // Solo procesa alumnos activos que realmente pertenecen al semestre y grupo de esta asignación.
+        $alumnos = Alumno::where('estado', 'ACTIVO')
+            ->where('semestre', $asignacion->materia->semestre)
+            ->where('grupo', $asignacion->grupo)
+            ->get();
+
+        $datosEnviados = $request->input('calificaciones', []);
+
+        $normalizar = function ($valor): ?float {
+            if ($valor === null || $valor === '') {
+                return null;
+            }
+
+            return round((float) $valor, 2);
+        };
+
+        foreach ($alumnos as $alumno) {
+            $notas = $datosEnviados[$alumno->id_alumno] ?? [];
+
+            $calif1    = $normalizar($notas['calif_1'] ?? null);
+            $calif2    = $normalizar($notas['calif_2'] ?? null);
+            $calif3    = $normalizar($notas['calif_3'] ?? null);
+            $evalFinal = $normalizar($notas['eval_final'] ?? null);
+
+            $capturadas = array_values(array_filter(
+                [$calif1, $calif2, $calif3, $evalFinal],
+                fn ($nota) => $nota !== null
+            ));
+
+            $cantidad = count($capturadas);
+
+            if ($cantidad > 0) {
+                $promedio = round(array_sum($capturadas) / $cantidad, 2);
+
                 Calificacion::updateOrCreate(
                     [
-                        'id_alumno'  => $id_alumno,
+                        'id_alumno'  => $alumno->id_alumno,
                         'id_materia' => $asignacion->id_materia,
                         'periodo'    => $periodoActual,
                     ],
                     [
-                        'calificacion' => $nota
+                        'calif_1'      => $calif1,
+                        'calif_2'      => $calif2,
+                        'calif_3'      => $calif3,
+                        'eval_final'   => $evalFinal,
+                        'calificacion' => $promedio,
                     ]
                 );
+            } else {
+                Calificacion::where('id_alumno', $alumno->id_alumno)
+                    ->where('id_materia', $asignacion->id_materia)
+                    ->where('periodo', $periodoActual)
+                    ->update([
+                        'calif_1'      => null,
+                        'calif_2'      => null,
+                        'calif_3'      => null,
+                        'eval_final'   => null,
+                        'calificacion' => null,
+                    ]);
             }
         }
 
-        return redirect()->route('docente.materias')->with('success', 'Calificaciones registradas correctamente.');
+        return redirect()
+            ->route('docente.materias.calificar', $asignacion->id_asignacion)
+            ->with('success', 'Calificaciones registradas correctamente.');
     }
 }

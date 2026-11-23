@@ -12,7 +12,6 @@
 @section('contenido')
 
 <style>
-    /* VARIABLES DE ENTORNO DOCENTE */
     .alumnos-panel {
         min-height: 100vh;
         background-color: #f4f6f9; /* Fondo gris claro general */
@@ -222,7 +221,8 @@
 
             <!-- BOTÓN GENERAR LISTAS (Instrucciones de diseño para el botón de listas) -->
             <div class="d-flex justify-content-end mb-4">
-                <a href="#" class="btn btn-docente-naranja rounded-pill px-4 fw-medium d-inline-flex align-items-center gap-2">
+                <a href="{{ route('docente.lista-asistencia', ['asignacion' => $asignacion->id_asignacion]) }}"
+                class="btn btn-docente-naranja rounded-pill px-4 fw-medium d-inline-flex align-items-center gap-2">
                     <i class="bi bi-file-earmark-pdf-fill"></i> Generar Lista de Asistencia (PDF)
                 </a>
             </div>

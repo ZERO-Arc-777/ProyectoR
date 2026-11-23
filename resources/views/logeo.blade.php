@@ -37,11 +37,6 @@
                             ACEPTAR
                         </button>
                     </form>
-
-                    <a href="#" class="d-block text-dark fw-bold text-decoration-none mb-4" style="font-size: 0.85rem;">
-                        RECUPERACION DE CONTRASEÑA
-                    </a>
-
                 </div>
             </div>
         </div>

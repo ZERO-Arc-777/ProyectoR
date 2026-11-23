@@ -13,7 +13,11 @@ class Calificacion extends Model
         'id_alumno',
         'id_materia',
         'periodo',
-        'calificacion'
+        'calif_1',
+        'calif_2',
+        'calif_3',
+        'eval_final',
+        'calificacion',
     ];
 
     public function alumno()

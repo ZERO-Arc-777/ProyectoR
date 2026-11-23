@@ -14,15 +14,6 @@
 @php
     $usuario = Auth::user();
     $docente = $docente ?? null;
-
-    // Obtener solamente los grupos asignados al docente desde asignaciones_academicas.
-    $asignaciones = $docente
-        ? $docente->asignacionesAcademicas()
-            ->with('materia')
-            ->orderBy('grupo')
-            ->get()
-            ->sortBy(fn ($a) => sprintf('%02d-%s', $a->materia?->semestre ?? 99, $a->grupo))
-        : collect();
 @endphp
 
 <style>
@@ -147,65 +138,12 @@
         font-weight: 600;
     }
 
-    .perfil-info {
-        background: #d1d5d6;
-        border: 1px solid #c0c4c5;
-        border-radius: 18px;
-        padding: 25px;
-        color: #212529;
-    }
-
-    /* SECCIÓN DE LISTAS DE ASISTENCIA */
-
-    .perfil-asistencia {
-        background: #d1d5d6;
-        border: 1px solid #c0c4c5;
-        border-radius: 20px;
-        padding: 30px;
-        color: #212529;
-    }
-
-    .perfil-grupo {
-        background: #ffffff;
-        border: 1px solid #c0c4c5;
-        border-radius: 14px;
-        padding: 20px;
-        height: 100%;
-    }
-
-    .perfil-grupo-etiqueta {
-        color: #6c757d;
-        font-size: .9rem;
-    }
-
-    .perfil-descargar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 16px;
-        border: none;
-        border-radius: 10px;
-        background: #fd7e14;
-        color: #ffffff;
-        font-weight: 600;
-        text-decoration: none;
-    }
-
-    .perfil-descargar:disabled {
-        background: #6c757d;
-        color: #ffffff;
-        cursor: not-allowed;
-        opacity: .8;
-    }
-
     @media (max-width: 767.98px) {
         .perfil-heading {
             padding: 24px;
         }
 
-        .perfil-card,
-        .perfil-asistencia {
+        .perfil-card {
             padding: 22px;
         }
     }
@@ -514,142 +452,6 @@
                 </div>
 
             </div>
-
-            <!-- NUEVA SECCIÓN: LISTAS DE ASISTENCIA -->
-            <section class="perfil-asistencia mt-4"
-                     aria-labelledby="titulo-asistencia">
-
-                <h4 class="perfil-card-title mb-2"
-                    id="titulo-asistencia">
-
-                    <span class="perfil-card-icon">
-                        <i class="bi bi-clipboard-check-fill"></i>
-                    </span>
-
-                    Listas de asistencia
-
-                </h4>
-
-                <p class="perfil-muted mb-4">
-                    Consulta tus grupos asignados y descarga
-                    las listas de asistencia correspondientes
-                    a tus materias.
-                </p>
-
-                <!-- CUANDO NO EXISTEN GRUPOS -->
-                @if ($asignaciones->isEmpty())
-
-                    <div class="perfil-field">
-
-                        <div class="d-flex align-items-center gap-3">
-
-                            <i class="bi bi-info-circle-fill fs-4"></i>
-
-                            <p class="mb-0 perfil-muted">
-                                Aún no tienes grupos asignados
-                                para consultar listas de asistencia.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                @else
-
-                    <!-- GRUPOS DEL DOCENTE -->
-                    <div class="row g-3">
-
-                        @foreach ($asignaciones as $asignacion)
-
-                            <div class="col-12 col-xl-6">
-
-                                <div class="perfil-grupo">
-
-                                    <!-- GRUPO -->
-                                    <h5 class="fw-bold mb-3">
-
-                                        <i class="bi bi-people-fill me-2"></i>
-
-                                        Grupo
-                                        {{ $asignacion->materia?->semestre ?? '-' }}°
-                                        {{ $asignacion->grupo }}
-
-                                    </h5>
-
-                                    <!-- MATERIA -->
-                                    <p class="mb-2">
-
-                                        <strong>Materia:</strong>
-
-                                        {{ $asignacion->materia?->nombre ?? 'No registrada' }}
-
-                                    </p>
-
-                                    <!-- PERIODO -->
-                                    <p class="perfil-grupo-etiqueta mb-3">
-
-                                        <strong>Periodo escolar:</strong>
-
-                                        {{ $asignacion->periodo ?? 'No registrado' }}
-
-                                    </p>
-
-                                    <!-- BOTÓN DE DESCARGA DE ASISTENCIA -->
-                                    <a
-                                        href="{{ route('docente.lista-asistencia', ['asignacion' => $asignacion->id_asignacion]) }}"
-                                        class="perfil-descargar"
-                                        title="Descargar lista de asistencia"
-                                    >
-                                        <i class="bi bi-download"></i>
-                                        Descargar lista
-                                    </a>
-
-                                    <small class="d-block perfil-muted mt-2">
-                                        Descarga la lista de asistencia de este grupo
-                                        en formato CSV compatible con Excel.
-                                    </small>
-
-                                </div>
-
-                            </div>
-
-                        @endforeach
-
-                    </div>
-
-                @endif
-
-            </section>
-
-            <!-- INFORMACIÓN ADICIONAL -->
-            <section class="perfil-info mt-4">
-
-                <div class="d-flex align-items-start gap-3">
-
-                    <div class="perfil-card-icon flex-shrink-0">
-                        <i class="bi bi-info-circle-fill"></i>
-                    </div>
-
-                    <div>
-
-                        <h5 class="fw-bold mb-2">
-                            Información de tu perfil
-                        </h5>
-
-                        <p class="perfil-muted mb-0">
-                            Este apartado permite consultar tus
-                            datos personales y laborales, así como
-                            visualizar los grupos asignados para
-                            la futura descarga de listas de asistencia.
-                            La información dependerá de los registros
-                            vinculados a tu cuenta docente.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </section>
 
         </main>
 

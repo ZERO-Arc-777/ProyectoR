@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Alumno;
 
 use App\Models\Alumno;
+use App\Models\Configuracion;
 use App\Models\Documento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class DocumentoController
 {
-    /**
-     * Catálogo único de trámites y documentos permitidos por regla académica.
-     */
     private function catalogoProcesos(): array
     {
         return [
@@ -63,7 +62,7 @@ class DocumentoController
         $semestreActual = (int) $alumno->semestre;
 
         $documentos = Documento::where('id_alumno', $alumno->id_alumno)
-            ->orderByDesc('created_at')
+            ->orderByDesc('updated_at')
             ->orderByDesc('id_documento')
             ->get();
 
@@ -139,6 +138,7 @@ class DocumentoController
         $tipoDocumento = $datos['tipo_documento'];
         $config = $catalogo[$proceso];
         $semestreActual = (int) $alumno->semestre;
+        $periodoActual = Configuracion::where('clave', 'periodo_actual')->value('valor') ?: 'No definido';
 
         // 1. Validar que el semestre del alumno permita este trámite
         if ($semestreActual < $config['semestre_minimo']) {
@@ -154,7 +154,7 @@ class DocumentoController
                 ->with('error', 'El tipo de documento seleccionado no corresponde a este trámite.');
         }
 
-        // 3. Bloqueo anti-spam y protección de documentos ya aprobados
+        // 3. Bloqueo anti-spam y protección de documentos pendientes o aprobados
         $consultaExistente = Documento::where('id_alumno', $alumno->id_alumno)
             ->where('proceso', $proceso)
             ->where('tipo_documento', $tipoDocumento);
@@ -164,7 +164,7 @@ class DocumentoController
         }
 
         $ultimoDocumento = $consultaExistente
-            ->orderByDesc('created_at')
+            ->orderByDesc('updated_at')
             ->orderByDesc('id_documento')
             ->first();
 
@@ -182,19 +182,43 @@ class DocumentoController
             }
         }
 
-        // 4. Guardar archivo PDF
-        // VERIFICA QUE EL DISCO ('local'/'public') Y LA COLUMNA ('ruta_archivo') COINCIDAN CON TU RUTA documentos.ver
+        // 4. Verificar si ya existe un registro con la misma llave única del periodo actual
+        $documentoMismoPeriodo = Documento::where('id_alumno', $alumno->id_alumno)
+            ->where('tipo_documento', $tipoDocumento)
+            ->where('proceso', $proceso)
+            ->where('periodo', $periodoActual)
+            ->first();
+
+        if ($documentoMismoPeriodo && in_array($documentoMismoPeriodo->estado_validacion, ['PENDIENTE', 'APROBADO'], true)) {
+            return redirect()
+                ->back()
+                ->with('error', "Ya existe un registro activo de \"{$tipoDocumento}\" en el periodo {$periodoActual}.");
+        }
+
+        $rutaAnterior = $documentoMismoPeriodo?->ruta_archivo;
+
+        // 5. Guardar el nuevo PDF y crear o actualizar respetando la restricción única
         $rutaArchivo = $request->file('archivo')->store('expedientes/' . $alumno->matricula, 'local');
 
-        Documento::create([
-            'id_alumno' => $alumno->id_alumno,
-            'proceso' => $proceso,
-            'semestre' => $semestreActual,
-            'tipo_documento' => $tipoDocumento,
-            'ruta_archivo' => $rutaArchivo,
-            'estado_validacion' => 'PENDIENTE',
-            'observaciones' => null,
-        ]);
+        Documento::updateOrCreate(
+            [
+                'id_alumno' => $alumno->id_alumno,
+                'tipo_documento' => $tipoDocumento,
+                'proceso' => $proceso,
+                'periodo' => $periodoActual,
+            ],
+            [
+                'semestre' => $semestreActual,
+                'ruta_archivo' => $rutaArchivo,
+                'estado_validacion' => 'PENDIENTE',
+                'observaciones' => null,
+            ]
+        );
+
+        // 6. Eliminar del disco el PDF rechazado anterior para no acumular archivos huérfanos
+        if ($rutaAnterior && $rutaAnterior !== $rutaArchivo && Storage::disk('local')->exists($rutaAnterior)) {
+            Storage::disk('local')->delete($rutaAnterior);
+        }
 
         return redirect()
             ->route('alumno.documentos')

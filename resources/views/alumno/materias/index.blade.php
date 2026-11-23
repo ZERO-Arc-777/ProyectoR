@@ -68,7 +68,7 @@
         color: #6c757d;
     }
 
-    /* CONTENEDOR PRINCIPAL */
+    /* CONTENEDORES PRINCIPALES */
     .alumno-card {
         background: #d1d5d6;
         border: 1px solid #c0c4c5;
@@ -111,13 +111,18 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
         box-shadow: 0 2px 6px rgba(0, 0, 0, .06);
-        transition: transform .15s ease, box-shadow .15s ease;
+        transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
     }
 
     .kardex-materia-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(0, 0, 0, .1);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+        background-color: #c8dcff;
+        color: inherit;
     }
 
     .kardex-materia-nombre {
@@ -129,11 +134,26 @@
         word-break: break-word;
     }
 
+    .kardex-materia-footer {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
     .kardex-materia-calificacion {
         font-size: 1.15rem;
         font-weight: 800;
         color: #111827;
-        margin-top: 14px;
+        line-height: 1;
+    }
+
+    .kardex-materia-link {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #2b59c3;
+        white-space: nowrap;
     }
 
     .kardex-vacio {
@@ -144,6 +164,58 @@
         text-align: center;
         color: #9aa0a6;
         font-size: 0.8rem;
+    }
+
+    /* TARJETAS DE BOLETAS POR PERIODO */
+    .periodo-doc-card {
+        background: #ffffff;
+        border: 1px solid #d7dce1;
+        border-radius: 16px;
+        padding: 18px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .periodo-doc-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .09);
+    }
+
+    .periodo-doc-card.es-actual {
+        border: 2px solid #0d6efd;
+    }
+
+    .periodo-doc-titulo {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.3;
+    }
+
+    .periodo-doc-meta {
+        font-size: 0.76rem;
+        color: #6c757d;
+        font-weight: 600;
+    }
+
+    .btn-boleta-pdf {
+        background-color: #0d6efd;
+        border: none;
+        color: #ffffff;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 9px 14px;
+        transition: background-color .2s;
+    }
+
+    .btn-boleta-pdf:hover {
+        background-color: #0b5ed7;
+        color: #ffffff;
     }
 </style>
 
@@ -203,6 +275,7 @@
         {{-- CONTENIDO PRINCIPAL --}}
         <main class="col-12 col-md-9 col-lg-10 p-4 p-lg-5">
 
+            {{-- ENCABEZADO --}}
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
                     <h2 class="fw-bold mb-1 text-dark">Mi Kárdex Académico</h2>
@@ -217,7 +290,18 @@
                 </span>
             </div>
 
-            <div class="card alumno-card shadow-sm p-4">
+            {{-- SECCIÓN 1: KÁRDEX ACADÉMICO (1° A 6° SEMESTRE) --}}
+            <div class="card alumno-card shadow-sm p-4 mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-journal-bookmark-fill text-primary me-2"></i>
+                        Materias por Semestre
+                    </h5>
+                    <small class="alumno-muted">
+                        Haz clic en cualquier materia para consultar el desglose de sus calificaciones.
+                    </small>
+                </div>
+
                 <div class="bg-white rounded-3 border border-secondary p-4 shadow-sm">
                     <div class="kardex-scroll">
                         <div class="kardex-grid">
@@ -229,26 +313,33 @@
                                         0{{ $semestre }}
                                     </div>
 
-                                    {{-- TARJETAS DE MATERIAS --}}
+                                    {{-- TARJETAS CLICABLES DE MATERIAS --}}
                                     @if (isset($materias[$semestre]) && $materias[$semestre]->isNotEmpty())
                                         @foreach ($materias[$semestre] as $materia)
                                             @php
                                                 $nota = $calificaciones[$materia->id_materia] ?? null;
                                             @endphp
 
-                                            <div class="kardex-materia-card">
+                                            <a href="{{ route('alumno.materias.detalle', $materia->id_materia) }}"
+                                               class="kardex-materia-card">
                                                 <div class="kardex-materia-nombre">
                                                     {{ $materia->nombre }}
                                                 </div>
 
-                                                <div class="kardex-materia-calificacion">
-                                                    @if ($nota !== null)
-                                                        {{ rtrim(rtrim(number_format((float) $nota, 2, '.', ''), '0'), '.') }}
-                                                    @else
-                                                        <span class="text-muted fw-normal">-</span>
-                                                    @endif
+                                                <div class="kardex-materia-footer">
+                                                    <div class="kardex-materia-calificacion">
+                                                        @if ($nota !== null)
+                                                            {{ rtrim(rtrim(number_format((float) $nota, 2, '.', ''), '0'), '.') }}
+                                                        @else
+                                                            <span class="text-muted fw-normal">-</span>
+                                                        @endif
+                                                    </div>
+
+                                                    <span class="kardex-materia-link">
+                                                        Detalle <i class="bi bi-chevron-right"></i>
+                                                    </span>
                                                 </div>
-                                            </div>
+                                            </a>
                                         @endforeach
                                     @else
                                         <div class="kardex-vacio">
@@ -259,6 +350,53 @@
                             @endfor
 
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- SECCIÓN 2: BOLETAS ORGANIZADAS POR PERIODO --}}
+            <div class="card alumno-card shadow-sm p-4">
+                <div class="bg-white rounded-3 border border-secondary p-4 shadow-sm">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h5 class="fw-bold text-dark mb-0">
+                            <i class="bi bi-folder2-open text-primary me-2"></i>
+                            Boletas por periodo
+                        </h5>
+                        <small class="alumno-muted">
+                            Descarga tu boleta oficial en formato PDF correspondiente a cada periodo escolar.
+                        </small>
+                    </div>
+
+                    <div class="row g-3">
+                        @foreach ($periodosDisponibles as $item)
+                            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                                <div class="periodo-doc-card {{ $item['es_actual'] ? 'es-actual' : '' }}">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                            <span class="periodo-doc-titulo">
+                                                {{ $item['periodo'] }}
+                                            </span>
+                                            @if ($item['es_actual'])
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">
+                                                    actual
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="periodo-doc-meta">
+                                            {{ $item['semestre_etiqueta'] }} &middot; {{ $item['total_materias'] }} {{ $item['total_materias'] === 1 ? 'materia' : 'materias' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <a href="{{ route('alumno.materias.boleta', ['periodo' => $item['periodo']]) }}"
+                                           class="btn btn-boleta-pdf shadow-sm text-center text-decoration-none">
+                                            <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+                                            Boleta (PDF)
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>

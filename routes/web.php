@@ -62,11 +62,6 @@ Route::post('/login', [AuthController::class, 'iniciarSesion'])
 |--------------------------------------------------------------------------
 | CIERRE DE SESIÓN SEGURO
 |--------------------------------------------------------------------------
-|
-| Se permite únicamente POST.
-| Laravel aplica protección CSRF mediante el middleware web.
-| Se requiere una sesión autenticada.
-|
 */
 
 Route::post('/logout', [AuthController::class, 'cerrarSesion'])
@@ -78,28 +73,18 @@ Route::post('/logout', [AuthController::class, 'cerrarSesion'])
 |--------------------------------------------------------------------------
 | RUTAS DEL ADMINISTRADOR
 |--------------------------------------------------------------------------
-|
-| Solo usuarios autenticados con rol 1.
-|
 */
 
 Route::middleware(['auth', 'role:1'])
     ->prefix('admin')
     ->group(function () {
 
-        // ==========================================
         // PANEL PRINCIPAL
-        // ==========================================
-
         Route::get('/', function () {
             return view('admin.dashboard');
         })->name('admin.dashboard');
 
-
-        // ==========================================
         // USUARIOS
-        // ==========================================
-
         Route::get('/usuarios', [UsuarioController::class, 'index'])
             ->name('admin.usuarios');
 
@@ -115,11 +100,7 @@ Route::middleware(['auth', 'role:1'])
         Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])
             ->name('admin.usuarios.update');
 
-
-        // ==========================================
         // ALUMNOS
-        // ==========================================
-
         Route::get('/alumnos', [AlumnoController::class, 'index'])
             ->name('admin.alumnos');
 
@@ -135,11 +116,7 @@ Route::middleware(['auth', 'role:1'])
         Route::put('/alumnos/{id}', [AlumnoController::class, 'update'])
             ->name('admin.alumnos.update');
 
-
-        // ==========================================
         // DOCENTES
-        // ==========================================
-
         Route::get('/docentes', [DocenteController::class, 'index'])
             ->name('admin.docentes');
 
@@ -155,11 +132,7 @@ Route::middleware(['auth', 'role:1'])
         Route::put('/docentes/{id}', [DocenteController::class, 'update'])
             ->name('admin.docentes.update');
 
-
-        // ==========================================
         // MATERIAS Y PERIODO ACADÉMICO
-        // ==========================================
-
         Route::get('/materias', [MateriaController::class, 'index'])
             ->name('admin.materias');
 
@@ -178,22 +151,14 @@ Route::middleware(['auth', 'role:1'])
         Route::post('/materias/periodo', [MateriaController::class, 'actualizarPeriodo'])
             ->name('admin.materias.periodo');
 
-
-        // ==========================================
         // PAGOS
-        // ==========================================
-
         Route::get('/pagos', [PagoController::class, 'index'])
             ->name('admin.pagos');
 
         Route::put('/pagos/{id_solicitud}/estado', [PagoController::class, 'updateEstado'])
             ->name('admin.pagos.updateEstado');
 
-
-        // ==========================================
         // EXPEDIENTES Y DOCUMENTOS
-        // ==========================================
-
         Route::get(
             '/revision-inscripciones',
             [ExpedienteController::class, 'inscripciones']
@@ -213,7 +178,6 @@ Route::middleware(['auth', 'role:1'])
             '/documento/{id}/estado',
             [ExpedienteController::class, 'updateEstado']
         )->name('admin.documentos.estado');
-
     });
 
 
@@ -221,36 +185,29 @@ Route::middleware(['auth', 'role:1'])
 |--------------------------------------------------------------------------
 | RUTAS DEL ALUMNO
 |--------------------------------------------------------------------------
-|
-| Solo usuarios autenticados con rol 3.
-|
 */
 
 Route::middleware(['auth', 'role:3'])
     ->prefix('alumno')
     ->group(function () {
 
-        // ==========================================
         // PANEL PRINCIPAL
-        // ==========================================
-
         Route::get('/', function () {
             return view('alumno.dashboard');
         })->name('alumno.dashboard');
 
-
-        // ==========================================
-        // MATERIAS Y KARDEX
-        // ==========================================
-
+        // MATERIAS, KÁRDEX, DETALLE POR MATERIA Y BOLETAS PDF
         Route::get('/materias', [MateriaAController::class, 'index'])
             ->name('alumno.materias');
 
+        Route::get('/materias/boleta-pdf', [MateriaAController::class, 'descargarBoleta'])
+            ->name('alumno.materias.boleta');
 
-        // ==========================================
+        Route::get('/materias/{id_materia}', [MateriaAController::class, 'detalle'])
+            ->whereNumber('id_materia')
+            ->name('alumno.materias.detalle');
+
         // SOLICITUDES
-        // ==========================================
-
         Route::get(
             '/solicitudes',
             [AlumnoSolicitudController::class, 'index']
@@ -266,11 +223,7 @@ Route::middleware(['auth', 'role:3'])
             [AlumnoSolicitudController::class, 'store']
         )->name('alumno.solicitudes.store');
 
-
-        // ==========================================
         // EXPEDIENTE PERSONAL
-        // ==========================================
-
         Route::get(
             '/mi-expediente',
             [DocumentoController::class, 'index']
@@ -280,7 +233,6 @@ Route::middleware(['auth', 'role:3'])
             '/mi-expediente/subir',
             [DocumentoController::class, 'store']
         )->name('alumno.documentos.store');
-
     });
 
 
@@ -288,11 +240,6 @@ Route::middleware(['auth', 'role:3'])
 |--------------------------------------------------------------------------
 | VISUALIZACIÓN SEGURA DE DOCUMENTOS PDF
 |--------------------------------------------------------------------------
-|
-| Requiere una sesión autenticada.
-| El controlador verifica el rol y que el alumno
-| sea propietario del documento solicitado.
-|
 */
 
 Route::get(
@@ -308,50 +255,34 @@ Route::get(
 |--------------------------------------------------------------------------
 | RUTAS DEL DOCENTE
 |--------------------------------------------------------------------------
-|
-| Solo usuarios autenticados con rol 2.
-|
 */
 
 Route::middleware(['auth', 'role:2'])
     ->prefix('docente')
     ->group(function () {
 
-        // ==========================================
         // PANEL PRINCIPAL
-        // ==========================================
-
         Route::get('/', function () {
             return view('docente.dashboard');
         })->name('docente.dashboard');
 
-
-        // ==========================================
         // MATERIAS Y CALIFICACIONES
-        // ==========================================
-
         Route::get(
             '/materias',
             [MateriaDController::class, 'index']
         )->name('docente.materias');
 
-        // Mostrar formulario de calificaciones.
         Route::get(
             '/materias/{asignacion}/calificar',
             [MateriaDController::class, 'calificar']
         )->name('docente.materias.calificar');
 
-        // Guardar calificaciones.
         Route::post(
             '/materias/{asignacion}/calificar',
             [MateriaDController::class, 'guardarCalificaciones']
         )->name('docente.materias.guardar');
 
-
-        // ==========================================
         // GRUPOS ASIGNADOS
-        // ==========================================
-
         Route::get(
             '/grupos',
             [GrupoController::class, 'index']
@@ -362,26 +293,17 @@ Route::middleware(['auth', 'role:2'])
             [GrupoController::class, 'verAlumnos']
         )->name('docente.grupos.listas');
 
-
-        // ==========================================
         // PERFIL DEL DOCENTE
-        // ==========================================
-
         Route::get(
             '/perfil',
             [PerfilController::class, 'index']
         )->name('docente.perfil');
 
-
-        // ==========================================
         // LISTAS DE ASISTENCIA
-        // ==========================================
-
         Route::get(
             '/lista-asistencia/{asignacion}',
             [ListaAsistenciaController::class, 'descargar']
         )
             ->whereNumber('asignacion')
             ->name('docente.lista-asistencia');
-
     });
