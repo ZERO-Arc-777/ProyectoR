@@ -21,9 +21,13 @@ class UsuarioController
     {
         $datos = $request->validate([
             'buscar' => ['nullable', 'string', 'max:100'],
+            'rol' => ['nullable', 'integer', Rule::exists('roles', 'id_rol')],
+            'estado' => ['nullable', 'string', Rule::in(['ACTIVO', 'INACTIVO'])],
         ]);
 
         $buscar = trim($datos['buscar'] ?? '');
+        $rol = isset($datos['rol']) ? (int) $datos['rol'] : null;
+        $estado = $datos['estado'] ?? null;
 
         $usuarios = User::with('rol')
             ->when($buscar !== '', function ($query) use ($buscar) {
@@ -32,13 +36,19 @@ class UsuarioController
                         ->orWhere('correo', 'LIKE', "%{$buscar}%");
                 });
             })
+            ->when($rol !== null, function ($query) use ($rol) {
+                $query->where('id_rol', $rol);
+            })
+            ->when($estado !== null, function ($query) use ($estado) {
+                $query->where('estado', $estado);
+            })
             ->orderBy('id_usuario', 'desc')
             ->paginate(10)
             ->withQueryString();
 
         return view(
             'admin.usuarios.index',
-            compact('usuarios', 'buscar')
+            compact('usuarios', 'buscar', 'rol', 'estado')
         );
     }
 

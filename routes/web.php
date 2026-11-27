@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\DocenteController;
 use App\Http\Controllers\Admin\MateriaController;
 use App\Http\Controllers\Admin\PagoController;
 use App\Http\Controllers\Admin\ExpedienteController;
+use App\Http\Controllers\Admin\PeriodoController;
 
 // ==========================================
 // CONTROLADORES DE ALUMNOS
@@ -49,9 +50,8 @@ Route::get('/', [AuthController::class, 'mostrarRoles'])
     ->name('roles');
 
 // Formulario de inicio de sesión.
-Route::get('/login', function () {
-    return view('logeo');
-})->name('login');
+Route::get('/login', [AuthController::class, 'mostrarLogin'])
+    ->name('login');
 
 // Procesar el inicio de sesión.
 Route::post('/login', [AuthController::class, 'iniciarSesion'])
@@ -132,7 +132,23 @@ Route::middleware(['auth', 'role:1'])
         Route::put('/docentes/{id}', [DocenteController::class, 'update'])
             ->name('admin.docentes.update');
 
-        // MATERIAS Y PERIODO ACADÉMICO
+        Route::post('/docentes/asignaciones/{id_asignacion}/sustituir', [DocenteController::class, 'sustituirAsignacion'])
+            ->name('admin.docentes.asignaciones.sustituir');
+
+        // PERIODO ESCOLAR
+        Route::get('/periodo-escolar', [PeriodoController::class, 'index'])
+            ->name('admin.periodo.index');
+
+        Route::post('/periodo-escolar/abrir', [PeriodoController::class, 'abrirCiclo'])
+            ->name('admin.periodo.abrir');
+
+        Route::post('/periodo-escolar/corregir', [PeriodoController::class, 'corregirCiclo'])
+            ->name('admin.periodo.corregir');
+
+        Route::post('/periodo-escolar/cerrar', [PeriodoController::class, 'cerrarCiclo'])
+            ->name('admin.periodo.cerrar');
+
+        // MATERIAS
         Route::get('/materias', [MateriaController::class, 'index'])
             ->name('admin.materias');
 
@@ -148,15 +164,28 @@ Route::middleware(['auth', 'role:1'])
         Route::put('/materias/{id}', [MateriaController::class, 'update'])
             ->name('admin.materias.update');
 
-        Route::post('/materias/periodo', [MateriaController::class, 'actualizarPeriodo'])
-            ->name('admin.materias.periodo');
-
         // PAGOS
         Route::get('/pagos', [PagoController::class, 'index'])
             ->name('admin.pagos');
 
         Route::put('/pagos/{id_solicitud}/estado', [PagoController::class, 'updateEstado'])
+            ->whereNumber('id_solicitud')
             ->name('admin.pagos.updateEstado');
+
+        // CATÁLOGO DE PAGOS (SERVICIOS)
+        Route::get('/pagos/catalogo', [PagoController::class, 'catalogo'])
+            ->name('admin.pagos.catalogo');
+
+        Route::post('/pagos/catalogo', [PagoController::class, 'storeServicio'])
+            ->name('admin.pagos.catalogo.store');
+
+        Route::put('/pagos/catalogo/{id_servicio}', [PagoController::class, 'updateServicio'])
+            ->whereNumber('id_servicio')
+            ->name('admin.pagos.catalogo.update');
+
+        Route::delete('/pagos/catalogo/{id_servicio}', [PagoController::class, 'destroyServicio'])
+            ->whereNumber('id_servicio')
+            ->name('admin.pagos.catalogo.destroy');
 
         // EXPEDIENTES Y DOCUMENTOS
         Route::get(
@@ -306,4 +335,5 @@ Route::middleware(['auth', 'role:2'])
         )
             ->whereNumber('asignacion')
             ->name('docente.lista-asistencia');
-    });
+    }
+);

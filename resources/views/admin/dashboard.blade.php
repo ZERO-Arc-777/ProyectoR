@@ -182,6 +182,10 @@
                     <i class="bi bi-journal-text"></i> Materias
                 </a>
 
+                <a href="{{ route('admin.periodo.index') }}" class="admin-nav">
+                    <i class="bi bi-calendar-range-fill"></i> Periodo Escolar
+                </a>
+
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
                     <i class="bi bi-cash-coin"></i> Pagos
                 </a>
@@ -289,12 +293,24 @@
                     </div>
                 </div>
 
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-6 col-lg-3">
                     <a href="{{ route('admin.materias') }}" class="admin-card p-4 text-center d-flex flex-column justify-content-center">
                         <div class="admin-card-icon mx-auto mb-3">
                             <i class="bi bi-journal-text"></i>
                         </div>
-                        <h5 class="fw-bold mb-0">MATERIAS</h5>
+                        <h6 class="fw-bold mb-0">MATERIAS</h6>
+                    </a>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <a href="{{ route('admin.periodo.index') }}" class="admin-card p-4 text-center d-flex flex-column justify-content-center">
+                        <div class="admin-card-icon mx-auto mb-3">
+                            <i class="bi bi-calendar-range-fill"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">PERIODO ESCOLAR</h6>
+                        <small class="admin-muted fw-semibold">
+                            {{ $periodoEscolarGlobal ?? 'Sin definir' }}
+                        </small>
                     </a>
                 </div>
 

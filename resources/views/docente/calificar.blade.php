@@ -11,6 +11,16 @@
 
 @section('contenido')
 
+@php
+    $formatearEntero = static function ($valor) {
+        if ($valor === null || $valor === '') {
+            return '';
+        }
+
+        return (string) ((int) $valor);
+    };
+@endphp
+
 <style>
     .calificaciones-panel {
         min-height: 100vh;
@@ -49,7 +59,6 @@
         color: #6c757d;
     }
 
-    /* TARJETA BLANCA PARA TABLA */
     .calificaciones-table-card {
         background: #ffffff;
         border: 1px solid #c0c4c5;
@@ -58,7 +67,6 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
     }
 
-    /* ESTILOS DE TABLA */
     .table-calificaciones {
         width: 100%;
         margin-bottom: 0;
@@ -93,7 +101,10 @@
         background-color: #f8f9fa;
     }
 
-    /* ETIQUETAS DE ACENTO NARANJA */
+    .table-calificaciones tr.fila-eval-final td {
+        background-color: rgba(255, 193, 7, 0.08);
+    }
+
     .calificaciones-etiqueta {
         display: inline-flex;
         align-items: center;
@@ -106,7 +117,6 @@
         margin-left: 5px;
     }
 
-    /* ESTADO VACÍO */
     .calificaciones-vacio {
         background: #ffffff;
         border: 1px dashed #c0c4c5;
@@ -128,32 +138,43 @@
         font-size: 2.2rem;
     }
 
-    /* INPUTS DE CALIFICACIÓN */
     .input-calificacion {
         width: 74px;
         text-align: center;
         font-weight: 600;
     }
 
+    .input-calificacion:disabled {
+        background-color: #f1f3f5;
+        color: #adb5bd;
+        cursor: not-allowed;
+    }
+
+    .ef-hint {
+        display: block;
+        font-size: 0.7rem;
+        line-height: 1.2;
+        margin-top: 4px;
+        font-weight: 600;
+    }
+
     .promedio-badge {
-        min-width: 56px;
-        font-size: 0.85rem;
+        min-width: 68px;
+        font-size: 0.82rem;
         font-weight: 700;
+    }
+
+    .reglas-box {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 14px;
+        padding: 12px 16px;
+        font-size: 0.83rem;
+        color: #495057;
     }
 </style>
 
-@php
-    $formatearInput = function ($valor) {
-        if ($valor === null || $valor === '') {
-            return '';
-        }
-
-        return rtrim(rtrim(number_format((float) $valor, 2, '.', ''), '0'), '.');
-    };
-@endphp
-
 <div class="container-fluid calificaciones-panel">
-
     <div class="row min-vh-100">
 
         <!-- MENÚ LATERAL -->
@@ -184,22 +205,11 @@
                     <i class="bi bi-person-badge-fill"></i> Mi Perfil
                 </a>
                 <hr class="border-secondary my-3">
-                <!-- CERRAR SESIÓN SEGURO -->
                 <form action="{{ route('logout.seguro') }}" method="POST" class="m-0">
                     @csrf
-
                     <button type="submit"
                             class="calificaciones-nav text-danger"
-                            style="background: none;
-                                border: none;
-                                cursor: pointer;
-                                width: 100%;
-                                text-align: left;
-                                font: inherit;
-                                display: flex;
-                                align-items: center;
-                                gap: 12px;
-                                white-space: nowrap;">
+                            style="background: none; border: none; cursor: pointer; width: 100%; text-align: left; font: inherit; display: flex; align-items: center; gap: 12px; white-space: nowrap;">
                         <i class="bi bi-box-arrow-right"></i>
                         <span>Cerrar sesión</span>
                     </button>
@@ -210,7 +220,7 @@
         <!-- CONTENIDO PRINCIPAL -->
         <main class="col-12 col-md-9 col-lg-10 p-4 p-lg-5">
 
-            <!-- ENCABEZADO CON BOTÓN DE VOLVER -->
+            <!-- ENCABEZADO -->
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <div>
                     <h2 class="text-dark fw-bold mb-2">
@@ -226,10 +236,20 @@
                     </p>
                 </div>
 
-                <a href="{{ route('docente.materias') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 d-inline-flex align-items-center gap-1">
+                <a href="{{ route('docente.materias', ['periodo' => $asignacion->periodo]) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 d-inline-flex align-items-center gap-1">
                     <i class="bi bi-arrow-left"></i> Volver a mis materias
                 </a>
             </div>
+
+            <!-- AVISO SI EL PERIODO ESTÁ CERRADO -->
+            @if($esSoloLectura)
+                <div class="alert alert-warning rounded-4 d-flex align-items-center gap-2 mb-4 border-0 shadow-sm" role="alert">
+                    <i class="bi bi-lock-fill fs-5"></i>
+                    <div>
+                        <strong>Periodo cerrado (Solo lectura):</strong> Las calificaciones de este ciclo ya no pueden editarse.
+                    </div>
+                </div>
+            @endif
 
             <!-- ALERTA DE ÉXITO -->
             @if(session('success'))
@@ -245,7 +265,7 @@
                 <div class="alert alert-danger alert-dismissible fade show rounded-4 mb-4" role="alert">
                     <div class="d-flex align-items-center gap-2 fw-bold mb-1">
                         <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-                        <span>Revisa las calificaciones ingresadas (rango permitido: 0 a 10):</span>
+                        <span>Revisa las calificaciones ingresadas (solo enteros del 5 al 10):</span>
                     </div>
                     <ul class="mb-0 ps-4 small">
                         @foreach($errors->all() as $error)
@@ -258,19 +278,26 @@
 
             <!-- FORMULARIO EN TARJETA BLANCA -->
             <div class="calificaciones-table-card">
-                <form action="{{ route('docente.materias.guardar', $asignacion->id_asignacion) }}" method="POST">
+                <form action="{{ route('docente.materias.guardar', $asignacion->id_asignacion) }}"
+                      method="POST"
+                      id="formCalificaciones">
                     @csrf
 
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                         <div>
                             <h5 class="fw-bold mb-1">
                                 <i class="bi bi-list-ol me-2 text-dark"></i>
                                 Listado de Alumnos
                             </h5>
                             <small class="calificaciones-muted">
-                                Escala de 0 a 10. El promedio se calcula automáticamente dividiendo la suma de las calificaciones capturadas entre la cantidad registrada.
+                                Captura únicamente números enteros del <strong>5 al 10</strong>. Mientras el periodo siga abierto, cualquier corrección es reversible.
                             </small>
                         </div>
+                    </div>
+
+                    <div class="reglas-box mb-4">
+                        <i class="bi bi-info-circle-fill text-warning me-1"></i>
+                        <strong>Regla de Evaluación Final:</strong> Se habilita al confirmar <strong>2 o más parciales en 5</strong> (el Parcial 3 queda opcional) o cuando la suma de los 3 parciales es <strong>menor a 18 puntos</strong>. La nota de Evaluación Final sustituye al promedio de parciales.
                     </div>
 
                     <div class="table-responsive mb-4">
@@ -279,12 +306,12 @@
                                 <tr>
                                     <th style="width: 5%;">NÚM.</th>
                                     <th style="width: 11%;">MATRÍCULA</th>
-                                    <th style="width: 30%;">NOMBRE DEL ALUMNO</th>
+                                    <th style="width: 28%;">NOMBRE DEL ALUMNO</th>
                                     <th class="text-center" style="width: 11%;">PARCIAL 1</th>
                                     <th class="text-center" style="width: 11%;">PARCIAL 2</th>
                                     <th class="text-center" style="width: 11%;">PARCIAL 3</th>
-                                    <th class="text-center" style="width: 11%;">EVAL. FINAL</th>
-                                    <th class="text-center" style="width: 10%;">PROMEDIO</th>
+                                    <th class="text-center" style="width: 12%;">EVAL. FINAL</th>
+                                    <th class="text-center" style="width: 11%;">PROMEDIO</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -292,15 +319,32 @@
                                     @php
                                         $registro = $calificacionesPrevias[$alumno->id_alumno] ?? null;
 
-                                        $valC1 = old("calificaciones.{$alumno->id_alumno}.calif_1", $formatearInput($registro?->calif_1));
-                                        $valC2 = old("calificaciones.{$alumno->id_alumno}.calif_2", $formatearInput($registro?->calif_2));
-                                        $valC3 = old("calificaciones.{$alumno->id_alumno}.calif_3", $formatearInput($registro?->calif_3));
-                                        $valEf = old("calificaciones.{$alumno->id_alumno}.eval_final", $formatearInput($registro?->eval_final));
+                                        $p1Previo = $registro?->calif_1 !== null ? (int) $registro->calif_1 : null;
+                                        $p2Previo = $registro?->calif_2 !== null ? (int) $registro->calif_2 : null;
+                                        $p3Previo = $registro?->calif_3 !== null ? (int) $registro->calif_3 : null;
+                                        $efPrevio = $registro?->eval_final !== null ? (int) $registro->eval_final : null;
+
+                                        $requeriaAntes = \App\Models\Calificacion::requiereEvaluacionFinal($p1Previo, $p2Previo, $p3Previo);
+
+                                        $valC1 = old("calificaciones.{$alumno->id_alumno}.calif_1", $formatearEntero($p1Previo));
+                                        $valC2 = old("calificaciones.{$alumno->id_alumno}.calif_2", $formatearEntero($p2Previo));
+                                        $valC3 = old("calificaciones.{$alumno->id_alumno}.calif_3", $formatearEntero($p3Previo));
+                                        $valEf = old("calificaciones.{$alumno->id_alumno}.eval_final", $formatearEntero($efPrevio));
+
+                                        $nombreCompleto = trim(implode(' ', array_filter([
+                                            $alumno->apellido_paterno,
+                                            $alumno->apellido_materno,
+                                            $alumno->nombres,
+                                        ])));
 
                                         $promedioGuardado = $registro?->calificacion;
                                     @endphp
 
-                                    <tr data-alumno-row="{{ $alumno->id_alumno }}">
+                                    <tr data-alumno-row="{{ $alumno->id_alumno }}"
+                                        data-alumno-nombre="{{ $nombreCompleto }}"
+                                        data-requeria-antes="{{ $requeriaAntes ? '1' : '0' }}"
+                                        data-ef-previo="{{ $efPrevio ?? '' }}"
+                                        class="{{ $requeriaAntes ? 'fila-eval-final' : '' }}">
                                         <td>
                                             <span class="text-muted fw-bold">{{ $index + 1 }}</span>
                                         </td>
@@ -308,55 +352,70 @@
                                             <span class="fw-medium">{{ $alumno->matricula }}</span>
                                         </td>
                                         <td>
-                                            <span class="fw-bold text-dark">
-                                                {{ $alumno->apellido_paterno }} {{ $alumno->apellido_materno }} {{ $alumno->nombres }}
-                                            </span>
+                                            <span class="fw-bold text-dark">{{ $nombreCompleto }}</span>
                                         </td>
                                         <td class="text-center">
                                             <input type="number"
-                                                   step="0.1"
-                                                   min="0"
+                                                   step="1"
+                                                   min="5"
                                                    max="10"
+                                                   inputmode="numeric"
                                                    name="calificaciones[{{ $alumno->id_alumno }}][calif_1]"
                                                    value="{{ $valC1 }}"
                                                    placeholder="-"
-                                                   class="form-control form-control-sm input-calificacion nota-input mx-auto">
+                                                   {{ $esSoloLectura ? 'disabled' : '' }}
+                                                   class="form-control form-control-sm input-calificacion parcial-input mx-auto"
+                                                   data-parcial="1">
                                         </td>
                                         <td class="text-center">
                                             <input type="number"
-                                                   step="0.1"
-                                                   min="0"
+                                                   step="1"
+                                                   min="5"
                                                    max="10"
+                                                   inputmode="numeric"
                                                    name="calificaciones[{{ $alumno->id_alumno }}][calif_2]"
                                                    value="{{ $valC2 }}"
                                                    placeholder="-"
-                                                   class="form-control form-control-sm input-calificacion nota-input mx-auto">
+                                                   {{ $esSoloLectura ? 'disabled' : '' }}
+                                                   class="form-control form-control-sm input-calificacion parcial-input mx-auto"
+                                                   data-parcial="2">
                                         </td>
                                         <td class="text-center">
                                             <input type="number"
-                                                   step="0.1"
-                                                   min="0"
+                                                   step="1"
+                                                   min="5"
                                                    max="10"
+                                                   inputmode="numeric"
                                                    name="calificaciones[{{ $alumno->id_alumno }}][calif_3]"
                                                    value="{{ $valC3 }}"
                                                    placeholder="-"
-                                                   class="form-control form-control-sm input-calificacion nota-input mx-auto">
+                                                   {{ $esSoloLectura ? 'disabled' : '' }}
+                                                   class="form-control form-control-sm input-calificacion parcial-input mx-auto"
+                                                   data-parcial="3">
                                         </td>
                                         <td class="text-center">
                                             <input type="number"
-                                                   step="0.1"
-                                                   min="0"
+                                                   step="1"
+                                                   min="5"
                                                    max="10"
+                                                   inputmode="numeric"
                                                    name="calificaciones[{{ $alumno->id_alumno }}][eval_final]"
                                                    value="{{ $valEf }}"
                                                    placeholder="-"
-                                                   class="form-control form-control-sm input-calificacion nota-input mx-auto">
+                                                   {{ ($esSoloLectura || !$requeriaAntes) ? 'disabled' : '' }}
+                                                   class="form-control form-control-sm input-calificacion ef-input mx-auto">
+                                            <span class="ef-hint text-muted d-none" data-ef-hint></span>
                                         </td>
                                         <td class="text-center">
-                                            @if($promedioGuardado !== null)
+                                            @if($requeriaAntes && $efPrevio === null)
+                                                <span class="badge rounded-pill px-3 py-2 promedio-badge bg-warning text-dark"
+                                                      data-promedio-display>
+                                                    Pend. EF
+                                                </span>
+                                            @elseif($promedioGuardado !== null)
                                                 <span class="badge rounded-pill px-3 py-2 promedio-badge {{ (float) $promedioGuardado >= 6 ? 'bg-success' : 'bg-danger' }}"
                                                       data-promedio-display>
-                                                    {{ $formatearInput($promedioGuardado) }}
+                                                    {{ \App\Models\Calificacion::formatearPromedio((float) $promedioGuardado) }}
                                                 </span>
                                             @else
                                                 <span class="badge rounded-pill px-3 py-2 promedio-badge bg-light text-muted border"
@@ -385,10 +444,11 @@
                         </table>
                     </div>
 
-                    <!-- BOTÓN VERDE FLOTANDO A LA DERECHA -->
-                    @if($alumnos->count() > 0)
+                    @if($alumnos->count() > 0 && !$esSoloLectura)
                         <div class="d-flex justify-content-end border-top pt-4 mt-2">
-                            <button type="submit" class="btn btn-success rounded-pill px-4 fw-medium d-inline-flex align-items-center gap-2">
+                            <button type="submit"
+                                    id="btnGuardarCalificaciones"
+                                    class="btn btn-success rounded-pill px-4 fw-medium d-inline-flex align-items-center gap-2">
                                 <i class="bi bi-floppy-fill"></i> Guardar Calificaciones
                             </button>
                         </div>
@@ -401,65 +461,293 @@
     </div>
 </div>
 
+{{-- MODAL DE CONFIRMACIÓN ANTI-ERRORES --}}
+@if(!$esSoloLectura)
+<div class="modal fade" id="modalConfirmarEvalFinal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-dark text-white">
+                <h6 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    Confirmar Cambios en Evaluación Final
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="bloqueNuevosEF" class="d-none mb-3">
+                    <p class="small fw-bold text-dark mb-2">
+                        Los siguientes alumnos pasarán a Evaluación Final. Verifica que no haya errores de captura antes de continuar:
+                    </p>
+                    <ul id="listaNuevosEF" class="list-group list-group-flush small border rounded-3"></ul>
+                </div>
+
+                <div id="bloqueRevertidosEF" class="d-none mb-2">
+                    <p class="small fw-bold text-dark mb-2">
+                        Al corregir sus parciales, estos alumnos salen de Evaluación Final y se limpiará la nota final registrada previamente:
+                    </p>
+                    <ul id="listaRevertidosEF" class="list-group list-group-flush small border rounded-3"></ul>
+                </div>
+
+                <p class="small text-muted mb-0 mt-2">
+                    Podrás corregir cualquier calificación mientras el periodo escolar permanezca abierto.
+                </p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-3 fw-semibold" data-bs-dismiss="modal">
+                    Revisar antes
+                </button>
+                <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold" id="btnConfirmarEnvioEF">
+                    <i class="bi bi-check-lg me-1"></i> Confirmar y Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const formatearPromedio = function (valor) {
-            return parseFloat(valor.toFixed(2)).toString();
+        const esSoloLectura = {{ $esSoloLectura ? 'true' : 'false' }};
+        const form = document.getElementById('formCalificaciones');
+        let envioConfirmado = false;
+
+        const leerEnteroValido = function (input) {
+            const texto = input.value.trim();
+            if (texto === '') {
+                input.classList.remove('is-invalid');
+                return { estado: 'vacio', valor: null };
+            }
+
+            if (!/^\d+$/.test(texto)) {
+                input.classList.add('is-invalid');
+                return { estado: 'invalido', valor: null };
+            }
+
+            const numero = parseInt(texto, 10);
+            if (numero < 5 || numero > 10) {
+                input.classList.add('is-invalid');
+                return { estado: 'invalido', valor: null };
+            }
+
+            input.classList.remove('is-invalid');
+            return { estado: 'valido', valor: numero };
         };
 
-        const recalcularFila = function (fila) {
-            const inputs = fila.querySelectorAll('.nota-input');
-            const badge = fila.querySelector('[data-promedio-display]');
+        const requiereEvaluacionFinal = function (p1, p2, p3) {
+            const capturados = [p1, p2, p3].filter(function (v) { return v !== null; });
+            const reprobados = capturados.filter(function (v) { return v < 6; }).length;
 
+            if (reprobados >= 2) {
+                return true;
+            }
+
+            if (capturados.length === 3) {
+                const suma = capturados[0] + capturados[1] + capturados[2];
+                if (suma < 18) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        const aplicarReglaRedondeo = function (valor) {
+            const truncadoCent = Math.floor((valor * 100) + 1e-9);
+            const segundoDecimal = truncadoCent % 10;
+
+            if (segundoDecimal >= 5) {
+                return (Math.floor(truncadoCent / 10) + 1) / 10;
+            }
+
+            return truncadoCent / 100;
+        };
+
+        const formatearPromedio = function (valor) {
+            const ajustado = aplicarReglaRedondeo(valor);
+            return parseFloat(ajustado.toFixed(2)).toString();
+        };
+
+        const analizarFila = function (fila) {
+            const p1Input = fila.querySelector('[data-parcial="1"]');
+            const p2Input = fila.querySelector('[data-parcial="2"]');
+            const p3Input = fila.querySelector('[data-parcial="3"]');
+            const efInput = fila.querySelector('.ef-input');
+
+            const r1 = leerEnteroValido(p1Input);
+            const r2 = leerEnteroValido(p2Input);
+            const r3 = leerEnteroValido(p3Input);
+            const rEf = leerEnteroValido(efInput);
+
+            const requeriaAntes = fila.dataset.requeriaAntes === '1';
+            const efPrevio = fila.dataset.efPrevio !== '' ? parseInt(fila.dataset.efPrevio, 10) : null;
+            const requiereAhora = requiereEvaluacionFinal(r1.valor, r2.valor, r3.valor);
+
+            return {
+                nombre: fila.dataset.alumnoNombre,
+                p1: r1.valor,
+                p2: r2.valor,
+                p3: r3.valor,
+                ef: rEf.valor,
+                requeriaAntes: requeriaAntes,
+                efPrevio: efPrevio,
+                requiereAhora: requiereAhora,
+                efInput: efInput,
+                efHint: fila.querySelector('[data-ef-hint]'),
+                badge: fila.querySelector('[data-promedio-display]')
+            };
+        };
+
+        const actualizarFila = function (fila) {
+            const info = analizarFila(fila);
+            const { p1, p2, p3, ef, requeriaAntes, efPrevio, requiereAhora, efInput, efHint, badge } = info;
+
+            // Control del campo Evaluación Final y su indicación
+            if (!esSoloLectura) {
+                if (requiereAhora && !requeriaAntes) {
+                    // Desbloqueo en dos tiempos: sigue bloqueado hasta confirmar y guardar
+                    efInput.disabled = true;
+                    efHint.textContent = 'Se habilitará al guardar';
+                    efHint.className = 'ef-hint text-warning';
+                    fila.classList.add('fila-eval-final');
+                } else if (requiereAhora && requeriaAntes) {
+                    efInput.disabled = false;
+                    efHint.textContent = 'Habilitada';
+                    efHint.className = 'ef-hint text-warning';
+                    fila.classList.add('fila-eval-final');
+                } else if (!requiereAhora && requeriaAntes) {
+                    efInput.disabled = true;
+                    efHint.textContent = efPrevio !== null ? 'Se limpiará al guardar' : 'Se bloqueará al guardar';
+                    efHint.className = 'ef-hint text-info';
+                    fila.classList.remove('fila-eval-final');
+                } else {
+                    efInput.disabled = true;
+                    efHint.textContent = '';
+                    efHint.className = 'ef-hint d-none';
+                    fila.classList.remove('fila-eval-final');
+                }
+            }
+
+            // Recálculo del badge de Promedio Final
             if (!badge) {
                 return;
             }
 
-            let suma = 0;
-            let cantidad = 0;
-
-            inputs.forEach(function (input) {
-                const texto = input.value.trim();
-                if (texto === '') {
-                    return;
+            if (requiereAhora) {
+                if (requeriaAntes && ef !== null) {
+                    badge.textContent = String(ef);
+                    badge.className = 'badge rounded-pill px-3 py-2 promedio-badge ' + (ef >= 6 ? 'bg-success' : 'bg-danger');
+                } else {
+                    badge.textContent = 'Pend. EF';
+                    badge.className = 'badge rounded-pill px-3 py-2 promedio-badge bg-warning text-dark';
                 }
+                return;
+            }
 
-                const numero = parseFloat(texto);
-                if (!Number.isNaN(numero) && numero >= 0 && numero <= 10) {
-                    suma += numero;
-                    cantidad++;
-                }
-            });
+            const parciales = [p1, p2, p3].filter(function (v) { return v !== null; });
 
-            if (cantidad === 0) {
+            if (parciales.length === 0) {
                 badge.textContent = '---';
                 badge.className = 'badge rounded-pill px-3 py-2 promedio-badge bg-light text-muted border';
                 return;
             }
 
-            const promedio = suma / cantidad;
+            const promedio = parciales.reduce(function (a, b) { return a + b; }, 0) / parciales.length;
+            const ajustado = aplicarReglaRedondeo(promedio);
+
             badge.textContent = formatearPromedio(promedio);
-            badge.className = 'badge rounded-pill px-3 py-2 promedio-badge ' + (promedio >= 6 ? 'bg-success' : 'bg-danger');
+            badge.className = 'badge rounded-pill px-3 py-2 promedio-badge ' + (ajustado >= 6 ? 'bg-success' : 'bg-danger');
         };
 
         document.querySelectorAll('tr[data-alumno-row]').forEach(function (fila) {
-            const inputs = fila.querySelectorAll('.nota-input');
+            actualizarFila(fila);
 
-            // Si al menos uno de los 4 rubros ya tiene valor, sincroniza la vista previa al cargar.
-            const tieneAlgunRubro = Array.from(inputs).some(function (input) {
-                return input.value.trim() !== '';
-            });
-
-            if (tieneAlgunRubro) {
-                recalcularFila(fila);
-            }
-
-            inputs.forEach(function (input) {
+            fila.querySelectorAll('.parcial-input, .ef-input').forEach(function (input) {
                 input.addEventListener('input', function () {
-                    recalcularFila(fila);
+                    actualizarFila(fila);
                 });
             });
         });
+
+        // Interceptar el envío para mostrar el modal solo si hay ingresos nuevos a EF o pérdida de EF previo
+        if (form && !esSoloLectura) {
+            const modalEl = document.getElementById('modalConfirmarEvalFinal');
+            const bloqueNuevos = document.getElementById('bloqueNuevosEF');
+            const listaNuevos = document.getElementById('listaNuevosEF');
+            const bloqueRevertidos = document.getElementById('bloqueRevertidosEF');
+            const listaRevertidos = document.getElementById('listaRevertidosEF');
+            const btnConfirmar = document.getElementById('btnConfirmarEnvioEF');
+
+            form.addEventListener('submit', function (e) {
+                if (envioConfirmado) {
+                    return;
+                }
+
+                const nuevosEF = [];
+                const revertidosConNota = [];
+
+                document.querySelectorAll('tr[data-alumno-row]').forEach(function (fila) {
+                    const info = analizarFila(fila);
+
+                    if (info.requiereAhora && !info.requeriaAntes) {
+                        nuevosEF.push(info);
+                    } else if (!info.requiereAhora && info.requeriaAntes && info.efPrevio !== null) {
+                        revertidosConNota.push(info);
+                    }
+                });
+
+                if (nuevosEF.length === 0 && revertidosConNota.length === 0) {
+                    return;
+                }
+
+                e.preventDefault();
+
+                listaNuevos.innerHTML = '';
+                listaRevertidos.innerHTML = '';
+
+                if (nuevosEF.length > 0) {
+                    bloqueNuevos.classList.remove('d-none');
+                    nuevosEF.forEach(function (item) {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        const detalle = `P1: ${item.p1 ?? '-'} · P2: ${item.p2 ?? '-'} · P3: ${item.p3 ?? '-'}`;
+                        li.innerHTML = `<span class="fw-bold text-dark"></span><span class="badge bg-warning text-dark"></span>`;
+                        li.querySelector('span.fw-bold').textContent = item.nombre;
+                        li.querySelector('span.badge').textContent = detalle;
+                        listaNuevos.appendChild(li);
+                    });
+                } else {
+                    bloqueNuevos.classList.add('d-none');
+                }
+
+                if (revertidosConNota.length > 0) {
+                    bloqueRevertidos.classList.remove('d-none');
+                    revertidosConNota.forEach(function (item) {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        li.innerHTML = `<span class="fw-bold text-dark"></span><span class="badge bg-secondary"></span>`;
+                        li.querySelector('span.fw-bold').textContent = item.nombre;
+                        li.querySelector('span.badge').textContent = `EF previa: ${item.efPrevio}`;
+                        listaRevertidos.appendChild(li);
+                    });
+                } else {
+                    bloqueRevertidos.classList.add('d-none');
+                }
+
+                if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                } else {
+                    envioConfirmado = true;
+                    form.submit();
+                }
+            });
+
+            if (btnConfirmar) {
+                btnConfirmar.addEventListener('click', function () {
+                    envioConfirmado = true;
+                    form.submit();
+                });
+            }
+        }
     });
 </script>
 

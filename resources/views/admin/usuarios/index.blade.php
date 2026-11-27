@@ -14,7 +14,7 @@
 <style>
     .admin-panel {
         min-height: 100vh;
-        background-color: #f4f6f9; 
+        background-color: #f4f6f9;
     }
 
     .admin-sidebar {
@@ -69,9 +69,99 @@
     }
 
     .admin-muted { color: #6c757d; }
-    
+
     .admin-logout { color: #ffb3b9; }
     .admin-logout:hover { color: #ffffff; background: rgba(220, 53, 69, .22); }
+
+    /* BARRA SUPERIOR Y BOTONES DE FILTRO */
+    .users-search-form {
+        flex: 1 1 200px;
+        max-width: 260px;
+        min-width: 175px;
+    }
+
+    .filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 50rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+        text-decoration: none;
+        border: 2px solid transparent;
+        background-color: #ffffff;
+        transition: transform .15s, background-color .15s, color .15s, box-shadow .15s;
+    }
+
+    .filter-pill:hover {
+        transform: translateY(-1px);
+    }
+
+    .filter-pill-dark {
+        border-color: #212529;
+        color: #212529;
+    }
+    .filter-pill-dark:hover,
+    .filter-pill-dark.active {
+        background-color: #212529;
+        color: #ffffff;
+    }
+
+    .filter-pill-warning {
+        border-color: #ffc107;
+        color: #212529;
+    }
+    .filter-pill-warning .filter-dot {
+        color: #e0a800;
+    }
+    .filter-pill-warning:hover,
+    .filter-pill-warning.active {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .filter-pill-warning:hover .filter-dot,
+    .filter-pill-warning.active .filter-dot {
+        color: #212529;
+    }
+
+    .filter-pill-primary {
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+    .filter-pill-primary:hover,
+    .filter-pill-primary.active {
+        background-color: #0d6efd;
+        color: #ffffff;
+    }
+
+    .filter-pill-success {
+        border-color: #198754;
+        color: #198754;
+    }
+    .filter-pill-success:hover,
+    .filter-pill-success.active {
+        background-color: #198754;
+        color: #ffffff;
+    }
+
+    .filter-pill-danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    .filter-pill-danger:hover,
+    .filter-pill-danger.active {
+        background-color: #dc3545;
+        color: #ffffff;
+    }
+
+    .filter-divider {
+        width: 1px;
+        height: 22px;
+        background-color: #9da3a8;
+        margin: 0 2px;
+    }
 </style>
 
 <div class="container-fluid admin-panel">
@@ -110,13 +200,17 @@
                 <a href="{{ route('admin.materias') }}" class="admin-nav">
                     <i class="bi bi-journal-text"></i> Materias
                 </a>
-                
+
+                <a href="{{ route('admin.periodo.index') }}" class="admin-nav">
+                    <i class="bi bi-calendar-range-fill"></i> Periodo Escolar
+                </a>
+
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
                     <i class="bi bi-cash-coin"></i> Pagos
                 </a>
 
                 <div class="mt-2 mb-1 ps-3 text-white-50 small fw-bold" style="letter-spacing: 0.5px;">REVISIONES</div>
-                
+
                 <a href="{{ route('admin.revision.inscripciones') }}" class="admin-nav-sub">
                     <i class="bi bi-arrow-return-right me-1"></i> Inscripciones
                 </a>
@@ -168,28 +262,98 @@
                 </div>
             @endif
 
+            @php
+                $rolActual = $rol ?? (request()->filled('rol') ? (int) request('rol') : null);
+                $estadoActual = $estado ?? request('estado');
+                $buscarActual = $buscar ?? request('buscar', '');
+
+                $construirUrlFiltro = function ($nuevoRol, $nuevoEstado) use ($buscarActual) {
+                    return route('admin.usuarios', array_filter([
+                        'buscar' => $buscarActual !== '' ? $buscarActual : null,
+                        'rol' => $nuevoRol,
+                        'estado' => $nuevoEstado,
+                    ], fn ($valor) => $valor !== null && $valor !== ''));
+                };
+            @endphp
+
             <div class="card admin-card-content shadow-sm p-4">
-                
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-                    <a href="{{ route('admin.usuarios.create') }}" class="btn btn-dark fw-bold px-4">
+
+                <!-- BARRA SUPERIOR EN UNA SOLA LÍNEA -->
+                <div class="d-flex flex-wrap flex-lg-nowrap justify-content-between align-items-center mb-4 gap-2">
+                    <a href="{{ route('admin.usuarios.create') }}"
+                       class="btn btn-dark fw-bold px-3 text-nowrap flex-shrink-0 shadow-sm"
+                       style="font-size: 0.85rem;">
                         <i class="bi bi-plus-circle me-1"></i> Crear Nuevo Usuario
                     </a>
-                    
-                    <form action="{{ route('admin.usuarios') }}" method="GET" class="d-flex" style="width: 380px; max-width: 100%;">
+
+                    <!-- BOTONES DE FILTRO POR ROL Y ESTADO -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-center gap-1">
+                        <a href="{{ $construirUrlFiltro($rolActual === 1 ? null : 1, $estadoActual) }}"
+                           class="filter-pill filter-pill-dark shadow-sm {{ $rolActual === 1 ? 'active' : '' }}"
+                           title="Filtrar por Administradores">
+                            <i class="bi {{ $rolActual === 1 ? 'bi-check-lg' : 'bi-shield-fill' }}"></i>
+                            Admin
+                        </a>
+
+                        <a href="{{ $construirUrlFiltro($rolActual === 2 ? null : 2, $estadoActual) }}"
+                           class="filter-pill filter-pill-warning shadow-sm {{ $rolActual === 2 ? 'active' : '' }}"
+                           title="Filtrar por Docentes">
+                            <i class="bi {{ $rolActual === 2 ? 'bi-check-lg' : 'bi-person-workspace' }} filter-dot"></i>
+                            Docente
+                        </a>
+
+                        <a href="{{ $construirUrlFiltro($rolActual === 3 ? null : 3, $estadoActual) }}"
+                           class="filter-pill filter-pill-primary shadow-sm {{ $rolActual === 3 ? 'active' : '' }}"
+                           title="Filtrar por Alumnos">
+                            <i class="bi {{ $rolActual === 3 ? 'bi-check-lg' : 'bi-mortarboard-fill' }}"></i>
+                            Alumno
+                        </a>
+
+                        <span class="filter-divider d-none d-sm-inline-block" aria-hidden="true"></span>
+
+                        <a href="{{ $construirUrlFiltro($rolActual, $estadoActual === 'ACTIVO' ? null : 'ACTIVO') }}"
+                           class="filter-pill filter-pill-success shadow-sm {{ $estadoActual === 'ACTIVO' ? 'active' : '' }}"
+                           title="Filtrar por Usuarios Activos">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Activos
+                        </a>
+
+                        <a href="{{ $construirUrlFiltro($rolActual, $estadoActual === 'INACTIVO' ? null : 'INACTIVO') }}"
+                           class="filter-pill filter-pill-danger shadow-sm {{ $estadoActual === 'INACTIVO' ? 'active' : '' }}"
+                           title="Filtrar por Usuarios Inactivos">
+                            <i class="bi bi-x-circle-fill"></i>
+                            Inactivos
+                        </a>
+                    </div>
+
+                    <form action="{{ route('admin.usuarios') }}" method="GET" class="d-flex users-search-form">
+                        @if($rolActual !== null)
+                            <input type="hidden" name="rol" value="{{ $rolActual }}">
+                        @endif
+                        @if($estadoActual)
+                            <input type="hidden" name="estado" value="{{ $estadoActual }}">
+                        @endif
+
                         <div class="input-group shadow-sm">
-                            <input type="text" name="buscar" class="form-control border-0" placeholder="Buscar por nombre o correo..." value="{{ $buscar ?? '' }}">
+                            <input type="text"
+                                   name="buscar"
+                                   class="form-control border-0"
+                                   style="font-size: 0.85rem;"
+                                   placeholder="Buscar nombre o correo..."
+                                   value="{{ $buscarActual }}">
                             <button type="submit" class="btn text-white fw-bold px-3" style="background-color: #198754;">
                                 <i class="bi bi-search"></i>
                             </button>
-                            @if(request('buscar'))
-                                <a href="{{ route('admin.usuarios') }}" class="btn btn-secondary px-3 text-white" title="Limpiar búsqueda">
+                            @if($buscarActual !== '')
+                                <a href="{{ route('admin.usuarios', array_filter(['rol' => $rolActual, 'estado' => $estadoActual])) }}" class="btn btn-secondary px-2 text-white" title="Limpiar búsqueda">
                                     <i class="bi bi-x-lg"></i>
                                 </a>
                             @endif
                         </div>
                     </form>
                 </div>
-                
+
+                <!-- TABLA DE USUARIOS -->
                 <div class="table-responsive bg-white rounded-3 border border-secondary shadow-sm">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light text-muted small">
@@ -251,7 +415,7 @@
                                 <tr>
                                     <td colspan="6" class="text-center py-5">
                                         <i class="bi bi-search fs-1 text-muted opacity-50 d-block mb-2"></i>
-                                        <span class="fw-bold text-muted">No se encontraron usuarios con esa búsqueda.</span>
+                                        <span class="fw-bold text-muted">No se encontraron usuarios con los filtros aplicados.</span>
                                     </td>
                                 </tr>
                             @endforelse

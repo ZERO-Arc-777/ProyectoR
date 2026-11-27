@@ -210,22 +210,45 @@
 
         <!-- CONTENIDO PRINCIPAL -->
         <main class="col-12 col-md-9 col-lg-10 p-4 p-lg-5">
-
-            <!-- BANNER SUPERIOR DE RESUMEN (Instrucción 2) -->
-            <section class="grupos-resumen mb-5">
+            <<!-- BANNER SUPERIOR DE RESUMEN + SELECTOR DE PERIODO -->
+            <section class="grupos-resumen mb-5 d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <div class="d-flex align-items-center gap-3">
                     <div class="grupos-resumen-icon">
                         <i class="bi bi-people-fill"></i>
                     </div>
                     <div>
                         <p class="grupos-muted mb-1 text-uppercase fw-bold" style="font-size: 0.85rem;">
-                            Total de asignaciones de grupos
+                            Total de asignaciones de grupos · {{ $periodoSeleccionado }}
                         </p>
-                        <h2 class="fw-bold mb-0 text-dark">
-                            {{ $asignaciones->count() }}
+                        <h2 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                            <span>{{ $asignaciones->count() }}</span>
+                            @if(!$esPeriodoActual || $periodoEstado !== 'ABIERTO')
+                                <span class="badge bg-dark text-warning fs-6 rounded-pill px-3">
+                                    <i class="bi bi-clock-history me-1"></i> Historial
+                                </span>
+                            @endif
                         </h2>
                     </div>
                 </div>
+
+                @if(count($periodosDisponibles) > 0)
+                    <form action="{{ route('docente.grupos') }}" method="GET" class="d-flex align-items-center gap-2 m-0">
+                        <label for="selector_periodo_grupos" class="small fw-bold text-dark mb-0 text-nowrap">
+                            Periodo:
+                        </label>
+                        <select name="periodo"
+                                id="selector_periodo_grupos"
+                                class="form-select form-select-sm border-0 shadow-sm rounded-pill fw-semibold"
+                                style="min-width: 230px;"
+                                onchange="this.form.submit()">
+                            @foreach($periodosDisponibles as $per)
+                                <option value="{{ $per }}" {{ $per === $periodoSeleccionado ? 'selected' : '' }}>
+                                    {{ $per }}{{ $per === $periodoActual ? ' (Actual)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
             </section>
 
             <!-- TÍTULO DE SECCIÓN -->

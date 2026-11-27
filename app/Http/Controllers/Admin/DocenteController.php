@@ -2,32 +2,30 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\AsignacionAcademica;
+use App\Models\Calificacion;
+use App\Models\Configuracion;
+use App\Models\Docente;
+use App\Models\Materia;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
-use App\Models\Docente;
-use App\Models\User;
-use App\Models\Materia;
-use App\Models\AsignacionAcademica;
-use App\Models\Configuracion;
-
 class DocenteController
 {
     private const GRUPOS_PERMITIDOS = ['A', 'B'];
-
-    // ==========================================
-    // CONSULTAR DOCENTES
-    // ==========================================
 
     public function index(Request $request)
     {
         $datos = $request->validate([
             'buscar' => ['nullable', 'string', 'max:100'],
+            'estado' => ['nullable', 'string', Rule::in(['ACTIVO', 'INACTIVO', 'BAJA'])],
         ]);
 
         $buscar = trim($datos['buscar'] ?? '');
+        $estado = $datos['estado'] ?? null;
 
         $docentes = Docente::query()
             ->when($buscar !== '', function ($query) use ($buscar) {
@@ -38,47 +36,33 @@ class DocenteController
                         ->orWhere('curp', 'LIKE', "%{$buscar}%");
                 });
             })
+            ->when($estado !== null, function ($query) use ($estado) {
+                $query->where('estado', $estado);
+            })
             ->orderBy('id_docente', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        return view(
-            'admin.docentes.index',
-            compact('docentes', 'buscar')
-        );
+        return view('admin.docentes.index', compact('docentes', 'buscar', 'estado'));
     }
-
-    // ==========================================
-    // MOSTRAR FORMULARIO DE REGISTRO
-    // ==========================================
 
     public function create()
     {
-        $usuariosOcupados = Docente::whereNotNull('id_usuario')
-            ->pluck('id_usuario');
+        $usuariosOcupados = Docente::whereNotNull('id_usuario')->pluck('id_usuario');
 
         $usuarios = User::where('id_rol', 2)
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
 
-        $materias = Materia::where('estado', 'ACTIVA')->get();
+        $materias = Materia::where('estado', 'ACTIVA')->orderBy('semestre')->orderBy('nombre')->get();
 
-        return view(
-            'admin.docentes.create',
-            compact('usuarios', 'materias')
-        );
+        return view('admin.docentes.create', compact('usuarios', 'materias'));
     }
-
-    // ==========================================
-    // NORMALIZAR ENTRADA
-    // ==========================================
 
     private function normalizarEntrada(Request $request): void
     {
         $datosNormalizados = [
-            'curp' => strtoupper(
-                trim((string) $request->input('curp', ''))
-            ),
+            'curp' => strtoupper(trim((string) $request->input('curp', ''))),
         ];
 
         if (is_array($request->input('grupos'))) {
@@ -99,146 +83,87 @@ class DocenteController
         $request->merge($datosNormalizados);
     }
 
-    // ==========================================
-    // VALIDACIONES GENERALES
-    // ==========================================
-
     private function reglas(?int $id = null): array
     {
         return [
             'id_usuario' => [
                 'nullable',
                 'integer',
-                Rule::exists('usuarios', 'id_usuario')
-                    ->where('id_rol', 2),
-                Rule::unique('docentes', 'id_usuario')
-                    ->ignore($id, 'id_docente'),
+                Rule::exists('usuarios', 'id_usuario')->where('id_rol', 2),
+                Rule::unique('docentes', 'id_usuario')->ignore($id, 'id_docente'),
             ],
-
             'numero_empleado' => [
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('docentes', 'numero_empleado')
-                    ->ignore($id, 'id_docente'),
+                Rule::unique('docentes', 'numero_empleado')->ignore($id, 'id_docente'),
             ],
-
-            'nombres' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-
-            'apellido_paterno' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-
-            'apellido_materno' => [
-                'nullable',
-                'string',
-                'max:100',
-            ],
-
+            'nombres'            => ['required', 'string', 'max:100'],
+            'apellido_paterno'   => ['required', 'string', 'max:100'],
+            'apellido_materno'   => ['nullable', 'string', 'max:100'],
             'curp' => [
                 'required',
                 'string',
                 'size:18',
                 'regex:/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$/',
-                Rule::unique('docentes', 'curp')
-                    ->ignore($id, 'id_docente'),
+                Rule::unique('docentes', 'curp')->ignore($id, 'id_docente'),
             ],
-
-            'cedula_profesional' => [
-                'nullable',
-                'string',
-                'max:50',
-            ],
-
+            'cedula_profesional' => ['nullable', 'string', 'max:50'],
             'estado' => $id === null
                 ? ['sometimes', Rule::in(['ACTIVO'])]
-                : [
-                    'required',
-                    Rule::in([
-                        'ACTIVO',
-                        'INACTIVO',
-                        'BAJA',
-                    ]),
-                ],
-
-            'materias' => [
-                'nullable',
-                'array',
-            ],
-
+                : ['required', Rule::in(['ACTIVO', 'INACTIVO', 'BAJA'])],
+            'materias'   => ['nullable', 'array'],
             'materias.*' => [
                 'nullable',
                 'integer',
-                Rule::exists('materias', 'id_materia')
-                    ->where('estado', 'ACTIVA'),
+                Rule::exists('materias', 'id_materia')->where('estado', 'ACTIVA'),
             ],
-
-            'grupos' => [
-                'nullable',
-                'array',
-            ],
-
-            'grupos.*' => [
-                'nullable',
-                'string',
-                Rule::in(self::GRUPOS_PERMITIDOS),
-            ],
+            'grupos'     => ['nullable', 'array'],
+            'grupos.*'   => ['nullable', 'string', Rule::in(self::GRUPOS_PERMITIDOS)],
         ];
     }
-
-    // ==========================================
-    // MENSAJES DE VALIDACION
-    // ==========================================
 
     private function mensajesValidacion(): array
     {
         return [
             'required' => 'El campo :attribute es obligatorio.',
-            'string' => 'El campo :attribute debe contener texto.',
-            'integer' => 'El campo :attribute debe ser un número entero.',
-            'array' => 'El campo :attribute debe tener un formato válido.',
-            'max' => 'El campo :attribute no debe superar :max caracteres.',
-            'size' => 'El campo :attribute debe contener exactamente :size caracteres.',
-            'regex' => 'El formato del campo :attribute no es válido.',
-            'unique' => 'El valor de :attribute ya está registrado.',
-            'exists' => 'El valor seleccionado en :attribute no existe o no está disponible.',
-            'in' => 'El valor seleccionado en :attribute no es válido.',
+            'string'   => 'El campo :attribute debe contener texto.',
+            'integer'  => 'El campo :attribute debe ser un número entero.',
+            'array'    => 'El campo :attribute debe tener un formato válido.',
+            'max'      => 'El campo :attribute no debe superar :max caracteres.',
+            'size'     => 'El campo :attribute debe contener exactamente :size caracteres.',
+            'regex'    => 'El formato del campo :attribute no es válido.',
+            'unique'   => 'El valor de :attribute ya está registrado.',
+            'exists'   => 'El valor seleccionado en :attribute no existe o no está disponible.',
+            'in'       => 'El valor seleccionado en :attribute no es válido.',
         ];
     }
 
     private function atributosValidacion(): array
     {
         return [
-            'id_usuario' => 'cuenta de usuario',
-            'numero_empleado' => 'número de empleado',
-            'nombres' => 'nombre',
-            'apellido_paterno' => 'apellido paterno',
-            'apellido_materno' => 'apellido materno',
-            'curp' => 'CURP',
+            'id_usuario'         => 'cuenta de usuario',
+            'numero_empleado'    => 'número de empleado',
+            'nombres'            => 'nombre',
+            'apellido_paterno'   => 'apellido paterno',
+            'apellido_materno'   => 'apellido materno',
+            'curp'               => 'CURP',
             'cedula_profesional' => 'cédula profesional',
-            'estado' => 'estado administrativo',
-            'materias' => 'materias',
-            'materias.*' => 'materia',
-            'grupos' => 'grupos',
-            'grupos.*' => 'grupo',
+            'estado'             => 'estado administrativo',
+            'materias'           => 'materias',
+            'materias.*'         => 'materia',
+            'grupos'             => 'grupos',
+            'grupos.*'           => 'grupo',
         ];
     }
 
-    // ==========================================
-    // VALIDAR ASIGNACIONES ACADEMICAS
-    // ==========================================
-
-    private function validarAsignaciones(array $datos): void
+    /**
+     * Valida las asignaciones solicitadas y devuelve el mapa normalizado ["id_materia|grupo" => ['id_materia', 'grupo']].
+     */
+    private function validarYPrepararAsignaciones(array $datos, string $periodoActual, ?int $idDocenteActual = null): array
     {
         $materias = $datos['materias'] ?? [];
         $grupos = $datos['grupos'] ?? [];
-
         $combinaciones = [];
 
         foreach ($materias as $indice => $idMateria) {
@@ -246,70 +171,57 @@ class DocenteController
                 continue;
             }
 
-            $grupo = strtoupper(
-                trim((string) ($grupos[$indice] ?? ''))
-            );
+            $idMateriaInt = (int) $idMateria;
+            $grupo = strtoupper(trim((string) ($grupos[$indice] ?? '')));
 
             if ($grupo === '') {
                 throw ValidationException::withMessages([
-                    "grupos.$indice" =>
-                        'Debes seleccionar un grupo para cada materia asignada.',
+                    "grupos.$indice" => 'Debes seleccionar un grupo para cada materia asignada.',
                 ]);
             }
 
             if (!in_array($grupo, self::GRUPOS_PERMITIDOS, true)) {
                 throw ValidationException::withMessages([
-                    "grupos.$indice" =>
-                        'El grupo seleccionado no es válido. Solo se permiten los grupos A o B.',
+                    "grupos.$indice" => 'El grupo seleccionado no es válido. Solo se permiten los grupos A o B.',
                 ]);
             }
 
-            $clave = $idMateria . '|' . $grupo;
+            $clave = $idMateriaInt . '|' . $grupo;
 
             if (isset($combinaciones[$clave])) {
                 throw ValidationException::withMessages([
-                    "materias.$indice" =>
-                        'No puedes asignar dos veces la misma materia al mismo grupo.',
+                    "materias.$indice" => 'No puedes asignar dos veces la misma materia al mismo grupo.',
                 ]);
             }
 
-            $combinaciones[$clave] = true;
-        }
-    }
+            // Verificar que otro docente no tenga ya esa misma materia en el mismo grupo y periodo.
+            $ocupada = AsignacionAcademica::with(['docente', 'materia'])
+                ->where('id_materia', $idMateriaInt)
+                ->where('grupo', $grupo)
+                ->where('periodo', $periodoActual)
+                ->when($idDocenteActual !== null, fn ($q) => $q->where('id_docente', '!=', $idDocenteActual))
+                ->first();
 
-    // ==========================================
-    // GUARDAR ASIGNACIONES ACADEMICAS
-    // ==========================================
+            if ($ocupada) {
+                $nombreMateria = $ocupada->materia?->nombre ?? "Materia #{$idMateriaInt}";
+                $semestre = $ocupada->materia?->semestre ? "{$ocupada->materia->semestre}° " : '';
+                $nombreTitular = $ocupada->docente
+                    ? trim("{$ocupada->docente->nombres} {$ocupada->docente->apellido_paterno} {$ocupada->docente->apellido_materno}")
+                    : 'otro docente';
 
-    private function guardarAsignaciones(
-        int $idDocente,
-        array $datos,
-        string $periodo
-    ): void {
-        $materias = $datos['materias'] ?? [];
-        $grupos = $datos['grupos'] ?? [];
-
-        foreach ($materias as $indice => $idMateria) {
-            if ($idMateria === null || $idMateria === '') {
-                continue;
+                throw ValidationException::withMessages([
+                    "materias.$indice" => "La materia {$nombreMateria} ({$semestre}Grupo {$grupo}) ya está asignada a {$nombreTitular} en el periodo {$periodoActual}.",
+                ]);
             }
 
-            $grupo = strtoupper(
-                trim((string) ($grupos[$indice] ?? ''))
-            );
-
-            AsignacionAcademica::create([
-                'id_docente' => $idDocente,
-                'id_materia' => $idMateria,
-                'grupo' => $grupo,
-                'periodo' => $periodo,
-            ]);
+            $combinaciones[$clave] = [
+                'id_materia' => $idMateriaInt,
+                'grupo'      => $grupo,
+            ];
         }
-    }
 
-    // ==========================================
-    // REGISTRAR DOCENTE
-    // ==========================================
+        return $combinaciones;
+    }
 
     public function store(Request $request)
     {
@@ -321,66 +233,39 @@ class DocenteController
             $this->atributosValidacion()
         );
 
-        $this->validarAsignaciones($datos);
+        $periodoActual = $this->obtenerPeriodoActual();
+        $asignacionesNuevas = $this->validarYPrepararAsignaciones($datos, $periodoActual);
 
-        DB::transaction(function () use ($datos) {
+        DB::transaction(function () use ($datos, $asignacionesNuevas, $periodoActual) {
             $docente = new Docente();
-
-            $docente->id_usuario =
-                $datos['id_usuario'] ?? null;
-
-            $docente->numero_empleado =
-                $datos['numero_empleado'];
-
-            $docente->nombres =
-                $datos['nombres'];
-
-            $docente->apellido_paterno =
-                $datos['apellido_paterno'];
-
-            $docente->apellido_materno =
-                $datos['apellido_materno'] ?? null;
-
-            $docente->curp =
-                $datos['curp'];
-
-            $docente->cedula_profesional =
-                $datos['cedula_profesional'] ?? null;
-
+            $docente->id_usuario = $datos['id_usuario'] ?? null;
+            $docente->numero_empleado = $datos['numero_empleado'];
+            $docente->nombres = $datos['nombres'];
+            $docente->apellido_paterno = $datos['apellido_paterno'];
+            $docente->apellido_materno = $datos['apellido_materno'] ?? null;
+            $docente->curp = $datos['curp'];
+            $docente->cedula_profesional = $datos['cedula_profesional'] ?? null;
             $docente->estado = 'ACTIVO';
-
             $docente->save();
 
-            $periodoActual = Configuracion::where(
-                'clave',
-                'periodo_actual'
-            )->first()?->valor ?? 'No definido';
-
-            $this->guardarAsignaciones(
-                $docente->id_docente,
-                $datos,
-                $periodoActual
-            );
+            foreach ($asignacionesNuevas as $item) {
+                AsignacionAcademica::create([
+                    'id_docente' => $docente->id_docente,
+                    'id_materia' => $item['id_materia'],
+                    'grupo'      => $item['grupo'],
+                    'periodo'    => $periodoActual,
+                ]);
+            }
         });
 
         return redirect()
             ->route('admin.docentes')
-            ->with(
-                'success',
-                'Docente y sus asignaciones registradas correctamente.'
-            );
+            ->with('success', 'Docente y sus asignaciones registradas correctamente.');
     }
-
-    // ==========================================
-    // MOSTRAR FORMULARIO DE EDICION
-    // ==========================================
 
     public function edit($id)
     {
-        $docente = Docente::where(
-            'id_docente',
-            $id
-        )->firstOrFail();
+        $docente = Docente::where('id_docente', $id)->firstOrFail();
 
         $usuariosOcupados = Docente::whereNotNull('id_usuario')
             ->where('id_docente', '!=', $id)
@@ -390,18 +275,21 @@ class DocenteController
             ->whereNotIn('id_usuario', $usuariosOcupados)
             ->get();
 
-        $materias = Materia::where('estado', 'ACTIVA')->get();
+        $materias = Materia::where('estado', 'ACTIVA')->orderBy('semestre')->orderBy('nombre')->get();
 
-        $periodoActual = Configuracion::where(
-            'clave',
-            'periodo_actual'
-        )->first()?->valor ?? 'No definido';
+        $periodoActual = $this->obtenerPeriodoActual();
 
-        $asignacionesActuales = AsignacionAcademica::where(
-            'id_docente',
-            $docente->id_docente
-        )
+        $asignacionesActuales = AsignacionAcademica::with('materia')
+            ->withCount('calificaciones')
+            ->where('id_docente', $docente->id_docente)
             ->where('periodo', $periodoActual)
+            ->get();
+
+        $otrosDocentes = Docente::where('id_docente', '!=', $docente->id_docente)
+            ->where('estado', 'ACTIVO')
+            ->orderBy('apellido_paterno')
+            ->orderBy('apellido_materno')
+            ->orderBy('nombres')
             ->get();
 
         return view(
@@ -410,23 +298,18 @@ class DocenteController
                 'docente',
                 'usuarios',
                 'materias',
-                'asignacionesActuales'
+                'asignacionesActuales',
+                'periodoActual',
+                'otrosDocentes'
             )
         );
     }
-
-    // ==========================================
-    // ACTUALIZAR DOCENTE
-    // ==========================================
 
     public function update(Request $request, $id)
     {
         $this->normalizarEntrada($request);
 
-        $docente = Docente::where(
-            'id_docente',
-            $id
-        )->firstOrFail();
+        $docente = Docente::where('id_docente', $id)->firstOrFail();
 
         $datos = $request->validate(
             $this->reglas((int) $docente->id_docente),
@@ -434,60 +317,113 @@ class DocenteController
             $this->atributosValidacion()
         );
 
-        $this->validarAsignaciones($datos);
+        $periodoActual = $this->obtenerPeriodoActual();
+        $deseadas = $this->validarYPrepararAsignaciones($datos, $periodoActual, (int) $docente->id_docente);
 
-        DB::transaction(function () use ($docente, $datos) {
-            $docente->id_usuario =
-                $datos['id_usuario'] ?? null;
+        $existentes = AsignacionAcademica::with('materia')
+            ->where('id_docente', $docente->id_docente)
+            ->where('periodo', $periodoActual)
+            ->get()
+            ->keyBy(fn ($a) => $a->id_materia . '|' . strtoupper($a->grupo));
 
-            $docente->numero_empleado =
-                $datos['numero_empleado'];
+        // Verificar que ninguna asignación a retirar tenga ya calificaciones capturadas.
+        $aEliminar = $existentes->diffKeys($deseadas);
 
-            $docente->nombres =
-                $datos['nombres'];
+        foreach ($aEliminar as $asigVieja) {
+            $tieneNotas = Calificacion::where('id_asignacion', $asigVieja->id_asignacion)->exists();
 
-            $docente->apellido_paterno =
-                $datos['apellido_paterno'];
+            if ($tieneNotas) {
+                $nombreMateria = $asigVieja->materia?->nombre ?? "Materia #{$asigVieja->id_materia}";
+                $semestre = $asigVieja->materia?->semestre ? "{$asigVieja->materia->semestre}° " : '';
 
-            $docente->apellido_materno =
-                $datos['apellido_materno'] ?? null;
+                throw ValidationException::withMessages([
+                    'materias' => "No puedes quitar la materia {$nombreMateria} ({$semestre}Grupo {$asigVieja->grupo}) porque ya tiene calificaciones capturadas en {$periodoActual}. Utiliza el botón «Sustituir docente» en la sección inferior para transferirla sin perder actas.",
+                ]);
+            }
+        }
 
-            $docente->curp =
-                $datos['curp'];
-
-            $docente->cedula_profesional =
-                $datos['cedula_profesional'] ?? null;
-
-            $docente->estado =
-                $datos['estado'];
-
+        DB::transaction(function () use ($docente, $datos, $existentes, $deseadas, $aEliminar, $periodoActual) {
+            $docente->id_usuario = $datos['id_usuario'] ?? null;
+            $docente->numero_empleado = $datos['numero_empleado'];
+            $docente->nombres = $datos['nombres'];
+            $docente->apellido_paterno = $datos['apellido_paterno'];
+            $docente->apellido_materno = $datos['apellido_materno'] ?? null;
+            $docente->curp = $datos['curp'];
+            $docente->cedula_profesional = $datos['cedula_profesional'] ?? null;
+            $docente->estado = $datos['estado'];
             $docente->save();
 
-            $periodoActual = Configuracion::where(
-                'clave',
-                'periodo_actual'
-            )->first()?->valor ?? 'No definido';
+            // 1. Eliminar solo las asignaciones retiradas (sin notas).
+            foreach ($aEliminar as $asigVieja) {
+                $asigVieja->delete();
+            }
 
-            // Conservar asignaciones de otros periodos.
-            AsignacionAcademica::where(
-                'id_docente',
-                $docente->id_docente
-            )
-                ->where('periodo', $periodoActual)
-                ->delete();
-
-            $this->guardarAsignaciones(
-                $docente->id_docente,
-                $datos,
-                $periodoActual
-            );
+            // 2. Insertar únicamente las asignaciones nuevas (conservando intactos los id_asignacion existentes).
+            foreach ($deseadas as $clave => $item) {
+                if (!$existentes->has($clave)) {
+                    AsignacionAcademica::create([
+                        'id_docente' => $docente->id_docente,
+                        'id_materia' => $item['id_materia'],
+                        'grupo'      => $item['grupo'],
+                        'periodo'    => $periodoActual,
+                    ]);
+                }
+            }
         });
 
         return redirect()
             ->route('admin.docentes')
-            ->with(
-                'success',
-                'Expediente de docente y asignaciones actualizados correctamente.'
-            );
+            ->with('success', 'Expediente de docente y asignaciones actualizados correctamente.');
+    }
+
+    public function sustituirAsignacion(Request $request, $id_asignacion)
+    {
+        $periodoActual = $this->obtenerPeriodoActual();
+
+        $asignacion = AsignacionAcademica::with(['materia', 'docente'])
+            ->where('id_asignacion', $id_asignacion)
+            ->firstOrFail();
+
+        if ($asignacion->periodo !== $periodoActual) {
+            return back()->withErrors([
+                'sustitucion' => 'Solo es posible sustituir asignaciones correspondientes al periodo escolar actual.',
+            ]);
+        }
+
+        $datos = $request->validate([
+            'nuevo_id_docente' => [
+                'required',
+                'integer',
+                Rule::exists('docentes', 'id_docente')->where('estado', 'ACTIVO'),
+            ],
+        ], [
+            'nuevo_id_docente.required' => 'Selecciona al docente sustituto.',
+            'nuevo_id_docente.exists'   => 'El docente sustituto debe existir y encontrarse en estado ACTIVO.',
+        ]);
+
+        if ((int) $datos['nuevo_id_docente'] === (int) $asignacion->id_docente) {
+            return back()->withErrors([
+                'sustitucion' => 'El docente sustituto debe ser distinto al docente actual.',
+            ]);
+        }
+
+        $nuevoDocente = Docente::findOrFail($datos['nuevo_id_docente']);
+
+        // Al conservar el mismo id_asignacion, el nuevo docente hereda todas las calificaciones ya capturadas.
+        $asignacion->id_docente = $nuevoDocente->id_docente;
+        $asignacion->save();
+
+        $nombreMateria = $asignacion->materia?->nombre ?? "Materia #{$asignacion->id_materia}";
+        $nombreNuevo = trim("{$nuevoDocente->nombres} {$nuevoDocente->apellido_paterno} {$nuevoDocente->apellido_materno}");
+
+        return back()->with(
+            'success',
+            "La materia {$nombreMateria} (Grupo {$asignacion->grupo}) fue transferida a {$nombreNuevo} conservando sus calificaciones registradas."
+        );
+    }
+
+    private function obtenerPeriodoActual(): string
+    {
+        return Configuracion::where('clave', 'periodo_actual')->value('valor') ?? 'No definido';
     }
 }

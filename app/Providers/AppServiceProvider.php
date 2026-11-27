@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
 
-        View::composer('layouts.app', function ($view) {
+        View::composer(['layouts.app', 'admin.dashboard'], function ($view) {
             $periodoEscolarGlobal = null;
 
             if (Auth::check()) {

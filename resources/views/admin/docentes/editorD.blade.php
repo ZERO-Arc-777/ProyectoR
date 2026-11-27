@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('titulo', 'Editar Expediente de Docente')
@@ -152,6 +151,10 @@
                     <i class="bi bi-journal-text"></i> Materias
                 </a>
 
+                <a href="{{ route('admin.periodo.index') }}" class="admin-nav">
+                    <i class="bi bi-calendar-range-fill"></i> Periodo Escolar
+                </a>
+
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
                     <i class="bi bi-cash-coin"></i> Pagos
                 </a>
@@ -218,6 +221,14 @@
                 </div>
 
                 <div class="card-body p-4 p-md-5">
+
+                    {{-- ALERTA DE ÉXITO --}}
+                    @if (session('success'))
+                        <div class="alert alert-success fw-bold rounded-3 shadow-sm border-0 mb-4">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
                     {{-- ERRORES DE VALIDACIÓN --}}
                     @if ($errors->any())
@@ -368,7 +379,7 @@
                         {{-- ASIGNACIONES ACADÉMICAS --}}
                         <div class="col-12 mb-2 text-start mt-2">
                             <label class="fw-bold text-dark mb-1 ms-1">
-                                Asignaciones Académicas
+                                Asignaciones Académicas ({{ $periodoActual }})
                             </label>
                         </div>
 
@@ -395,6 +406,9 @@
                         <div id="contenedor-materias">
 
                             @foreach($materiasFormulario as $index => $idMateria)
+                                @php
+                                    $grupoActual = strtoupper(trim((string) ($gruposFormulario[$index] ?? 'A')));
+                                @endphp
 
                                 <div class="materia-row">
 
@@ -427,12 +441,15 @@
                                                 Grupo
                                             </label>
 
-                                            <input type="text"
-                                                   name="grupos[]"
-                                                   class="form-control border-0 shadow-sm text-uppercase"
-                                                   value="{{ $gruposFormulario[$index] ?? 'A' }}"
-                                                   maxlength="10"
-                                                   placeholder="Ej. A">
+                                            <select name="grupos[]"
+                                                    class="form-select border-0 shadow-sm fw-bold">
+                                                <option value="A" {{ $grupoActual === 'A' ? 'selected' : '' }}>
+                                                    Grupo A
+                                                </option>
+                                                <option value="B" {{ $grupoActual === 'B' ? 'selected' : '' }}>
+                                                    Grupo B
+                                                </option>
+                                            </select>
                                         </div>
 
                                         <div class="col-md-1 col-4 mb-2">
@@ -479,6 +496,135 @@
                 </div>
             </div>
 
+            {{-- TARJETA DE SUSTITUCIÓN DE DOCENTE --}}
+            @if($asignacionesActuales->isNotEmpty())
+                <div class="card shadow-sm border-0 rounded-4 w-100 mx-auto mt-4"
+                     style="max-width: 750px; background-color: #d1d5d6;">
+
+                    <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center"
+                         style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="bi bi-arrow-left-right text-warning me-2"></i>
+                            SUSTITUCIÓN DE DOCENTE ({{ $periodoActual }})
+                        </h6>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <p class="small text-dark mb-3">
+                            Usa esta opción si el docente causó baja o cambio a mitad del ciclo. El docente sustituto heredará el grupo y todas las calificaciones parciales ya capturadas.
+                        </p>
+
+                        <div class="table-responsive bg-white rounded-3 border border-secondary shadow-sm">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light text-muted">
+                                    <tr>
+                                        <th class="ps-3">MATERIA</th>
+                                        <th class="text-center">GRUPO</th>
+                                        <th class="text-center">ACTAS</th>
+                                        <th class="text-end pe-3">ACCIÓN</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($asignacionesActuales as $asig)
+                                        <tr>
+                                            <td class="ps-3 fw-bold text-dark">
+                                                {{ $asig->materia->nombre ?? 'N/A' }}
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-dark rounded-pill">
+                                                    {{ $asig->materia->semestre ?? '' }}° {{ $asig->grupo }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                @if($asig->calificaciones_count > 0)
+                                                    <span class="badge bg-warning text-dark">
+                                                        {{ $asig->calificaciones_count }} registro(s)
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-light text-muted border">Sin notas</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-end pe-3">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-dark fw-bold rounded-pill btn-abrir-sustitucion"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#modalSustituirDocente"
+                                                        data-action="{{ route('admin.docentes.asignaciones.sustituir', $asig->id_asignacion) }}"
+                                                        data-materia="{{ $asig->materia->nombre ?? 'Materia' }} ({{ $asig->materia->semestre ?? '' }}° {{ $asig->grupo }})"
+                                                        {{ $otrosDocentes->isEmpty() ? 'disabled' : '' }}>
+                                                    <i class="bi bi-arrow-left-right me-1"></i> Sustituir
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if($otrosDocentes->isEmpty())
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Registra al menos otro docente activo para habilitar la sustitución.
+                            </small>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- MODAL SUSTITUIR DOCENTE --}}
+                <div class="modal fade" id="modalSustituirDocente" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <form method="POST" id="formSustituirDocente" action="">
+                                @csrf
+
+                                <div class="modal-header bg-dark text-white">
+                                    <h6 class="modal-title fw-bold">
+                                        <i class="bi bi-arrow-left-right text-warning me-2"></i>
+                                        Transferir Materia a Docente Sustituto
+                                    </h6>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <p class="small mb-2">
+                                        Materia a transferir: <strong id="textoMateriaSustituir" class="text-dark"></strong>
+                                    </p>
+
+                                    <div class="mb-2">
+                                        <label for="nuevo_id_docente" class="form-label fw-bold small text-dark">
+                                            Docente sustituto (solo activos)
+                                        </label>
+
+                                        <select name="nuevo_id_docente" id="nuevo_id_docente" class="form-select" required>
+                                            <option value="">-- Seleccionar docente --</option>
+                                            @foreach($otrosDocentes as $otro)
+                                                <option value="{{ $otro->id_docente }}">
+                                                    {{ $otro->apellido_paterno }} {{ $otro->apellido_materno }} {{ $otro->nombres }} (#{{ $otro->numero_empleado }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <p class="small text-muted mb-0">
+                                        El nuevo docente heredará automáticamente el grupo y las calificaciones parciales registradas hasta hoy.
+                                    </p>
+                                </div>
+
+                                <div class="modal-footer border-0">
+                                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-success fw-bold">
+                                        Confirmar Sustitución
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
         </main>
     </div>
 </div>
@@ -518,12 +664,10 @@
                         <div class="col-md-3 col-8 mb-2">
                             <label class="fw-bold text-dark mb-1">Grupo</label>
 
-                            <input type="text"
-                                   name="grupos[]"
-                                   class="form-control border-0 shadow-sm text-uppercase"
-                                   maxlength="10"
-                                   value="A"
-                                   placeholder="Ej. A">
+                            <select name="grupos[]" class="form-select border-0 shadow-sm fw-bold">
+                                <option value="A" selected>Grupo A</option>
+                                <option value="B">Grupo B</option>
+                            </select>
                         </div>
 
                         <div class="col-md-1 col-4 mb-2">
@@ -546,10 +690,16 @@
             if ($('.materia-row').length > 1) {
                 $(this).closest('.materia-row').remove();
             } else {
-                $(this).closest('.materia-row').find('select').val('');
-                $(this).closest('.materia-row').find('input').val('A');
+                $(this).closest('.materia-row').find('select[name="materias[]"]').val('');
+                $(this).closest('.materia-row').find('select[name="grupos[]"]').val('A');
             }
 
+        });
+
+        $(document).on('click', '.btn-abrir-sustitucion', function () {
+            $('#formSustituirDocente').attr('action', $(this).data('action'));
+            $('#textoMateriaSustituir').text($(this).data('materia'));
+            $('#nuevo_id_docente').val('');
         });
 
     });

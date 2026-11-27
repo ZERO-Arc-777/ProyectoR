@@ -55,6 +55,9 @@
                 <a href="{{ route('admin.materias') }}" class="admin-nav active" aria-current="page">
                     <i class="bi bi-journal-text"></i> Materias
                 </a>
+                <a href="{{ route('admin.periodo.index') }}" class="admin-nav">
+                    <i class="bi bi-calendar-range-fill"></i> Periodo Escolar
+                </a>
                 <a href="{{ route('admin.pagos') }}" class="admin-nav">
                     <i class="bi bi-cash-coin"></i> Pagos
                 </a>

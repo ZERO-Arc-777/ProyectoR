@@ -186,6 +186,7 @@
                 </div>
             </td>
         </tr>
+        @if($esPeriodoActual)
         <tr>
             <td>
                 <div class="student-field">
@@ -201,6 +202,7 @@
                 </div>
             </td>
         </tr>
+        @endif
         <tr>
             <td>
                 <div class="student-field">

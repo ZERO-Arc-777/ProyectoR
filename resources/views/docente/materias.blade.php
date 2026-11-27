@@ -223,15 +223,43 @@
                 </p>
             </div>
 
-            <!-- ALERTA / PERIODO ESCOLAR -->
-            <section class="materias-heading mb-4 d-flex align-items-center gap-3">
-                <i class="bi bi-calendar3 fs-2 text-white-50"></i>
-                <div>
-                    <p class="mb-1 text-white-50 small text-uppercase fw-bold">Periodo escolar actual</p>
-                    <h4 class="fw-bold mb-0 text-white">
-                        {{ $periodoActual ?? 'Periodo no definido' }}
-                    </h4>
+            <!-- ALERTA / SELECTOR DE PERIODO ESCOLAR -->
+            <section class="materias-heading mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-calendar3 fs-2 text-white-50"></i>
+                    <div>
+                        <p class="mb-1 text-white-50 small text-uppercase fw-bold">
+                            {{ $esPeriodoActual ? 'Periodo escolar actual' : 'Historial de periodo (Solo lectura)' }}
+                        </p>
+                        <h4 class="fw-bold mb-0 text-white d-flex flex-wrap align-items-center gap-2">
+                            <span>{{ $periodoSeleccionado ?? 'Periodo no definido' }}</span>
+                            @if(!$esEditable)
+                                <span class="badge bg-warning text-dark fs-6 rounded-pill px-3">
+                                    <i class="bi bi-lock-fill me-1"></i> Solo lectura
+                                </span>
+                            @endif
+                        </h4>
+                    </div>
                 </div>
+
+                @if(count($periodosDisponibles) > 0)
+                    <form action="{{ route('docente.materias') }}" method="GET" class="d-flex align-items-center gap-2 m-0">
+                        <label for="selector_periodo_materias" class="text-white-50 small fw-bold mb-0 text-nowrap">
+                            Consultar periodo:
+                        </label>
+                        <select name="periodo"
+                                id="selector_periodo_materias"
+                                class="form-select form-select-sm rounded-pill fw-semibold"
+                                style="min-width: 230px;"
+                                onchange="this.form.submit()">
+                            @foreach($periodosDisponibles as $per)
+                                <option value="{{ $per }}" {{ $per === $periodoSeleccionado ? 'selected' : '' }}>
+                                    {{ $per }}{{ $per === $periodoActual ? ' (Actual)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
             </section>
 
             <!-- TARJETA BLANCA - CONTENEDOR DE LA TABLA -->
@@ -273,9 +301,13 @@
                                     <td>
                                         <div class="d-flex gap-2">
                                             <!-- BOTÓN NARANJA (Sólo enlace de navegación) -->
-                                            <a href="{{ route('docente.materias.calificar', $asignacion->id_asignacion) }}" 
+                                            <a href="{{ route('docente.materias.calificar', $asignacion->id_asignacion) }}"
                                                class="btn btn-sm btn-outline-docente rounded-pill fw-medium px-3 d-inline-flex align-items-center gap-1">
-                                                <i class="bi bi-check2-square"></i> Calificar Grupo
+                                                @if($esEditable)
+                                                    <i class="bi bi-check2-square"></i> Calificar Grupo
+                                                @else
+                                                    <i class="bi bi-eye-fill"></i> Ver Calificaciones
+                                                @endif
                                             </a>
                                         </div>
                                     </td>

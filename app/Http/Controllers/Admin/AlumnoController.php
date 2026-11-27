@@ -11,7 +11,13 @@ class AlumnoController
 {
     public function index(Request $request)
     {
-        $buscar = trim((string) $request->get('buscar', ''));
+        $datos = $request->validate([
+            'buscar' => ['nullable', 'string', 'max:100'],
+            'estado' => ['nullable', 'string', Rule::in(['ACTIVO', 'INACTIVO', 'BAJA', 'EGRESADO'])],
+        ]);
+
+        $buscar = trim($datos['buscar'] ?? '');
+        $estado = $datos['estado'] ?? null;
 
         $alumnos = Alumno::with('usuario')
             ->when($buscar !== '', function ($query) use ($buscar) {
@@ -23,11 +29,18 @@ class AlumnoController
                         ->orWhere('curp', 'LIKE', "%{$buscar}%");
                 });
             })
+            ->when($estado !== null, function ($query) use ($estado) {
+                if ($estado === 'INACTIVO') {
+                    $query->where('estado', '!=', 'ACTIVO');
+                } else {
+                    $query->where('estado', $estado);
+                }
+            })
             ->orderBy('matricula', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.alumnos.index', compact('alumnos', 'buscar'));
+        return view('admin.alumnos.index', compact('alumnos', 'buscar', 'estado'));
     }
 
     public function create()

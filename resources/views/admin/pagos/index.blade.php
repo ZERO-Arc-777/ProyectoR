@@ -118,6 +118,10 @@
                 <a href="{{ route('admin.materias') }}" class="admin-nav">
                     <i class="bi bi-journal-text"></i> Materias
                 </a>
+
+                <a href="{{ route('admin.periodo.index') }}" class="admin-nav">
+                    <i class="bi bi-calendar-range-fill"></i> Periodo Escolar
+                </a>
                 
                 <a href="{{ route('admin.pagos') }}" class="admin-nav active" aria-current="page">
                     <i class="bi bi-cash-coin"></i> Pagos
@@ -196,24 +200,30 @@
                 </div>
             @endif
 
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-                <ul class="nav nav-pills bg-white p-1 rounded-3 shadow-sm border border-secondary">
+            <!-- BARRA DE ACCIONES EN UNA MISMA LÍNEA -->
+            <div class="d-flex flex-wrap flex-xl-nowrap justify-content-between align-items-center mb-4 gap-3">
+                <a href="{{ route('admin.pagos.catalogo') }}"
+                   class="btn btn-dark fw-bold px-3 py-2 shadow-sm text-nowrap">
+                    <i class="bi bi-card-list me-2"></i> Editar Catálogo de Pagos
+                </a>
+
+                <ul class="nav nav-pills flex-nowrap bg-white p-1 rounded-3 shadow-sm border border-secondary">
                     <li class="nav-item">
-                        <a class="nav-link px-4 {{ $estadoFiltro == 'PENDIENTE' ? 'active fw-bold' : 'text-dark' }}" 
+                        <a class="nav-link px-3 text-nowrap {{ $estadoFiltro == 'PENDIENTE' ? 'active fw-bold' : 'text-dark' }}" 
                            style="{{ $estadoFiltro == 'PENDIENTE' ? 'background-color: #212529; color: white;' : '' }}"
                            href="{{ route('admin.pagos', ['estado' => 'PENDIENTE']) }}">
                             <i class="bi bi-clock-history me-1"></i> Pendientes
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-4 {{ $estadoFiltro == 'PAGADA' ? 'active fw-bold' : 'text-dark' }}" 
+                        <a class="nav-link px-3 text-nowrap {{ $estadoFiltro == 'PAGADA' ? 'active fw-bold' : 'text-dark' }}" 
                            style="{{ $estadoFiltro == 'PAGADA' ? 'background-color: #198754; color: white;' : '' }}"
                            href="{{ route('admin.pagos', ['estado' => 'PAGADA']) }}">
                             <i class="bi bi-check-circle me-1"></i> Pagadas
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-4 {{ $estadoFiltro == 'CANCELADA' ? 'active fw-bold' : 'text-dark' }}" 
+                        <a class="nav-link px-3 text-nowrap {{ $estadoFiltro == 'CANCELADA' ? 'active fw-bold' : 'text-dark' }}" 
                            style="{{ $estadoFiltro == 'CANCELADA' ? 'background-color: #dc3545; color: white;' : '' }}"
                            href="{{ route('admin.pagos', ['estado' => 'CANCELADA']) }}">
                             <i class="bi bi-x-circle me-1"></i> Canceladas
@@ -221,7 +231,7 @@
                     </li>
                 </ul>
 
-                <form action="{{ route('admin.pagos') }}" method="GET" class="d-flex" style="width: 380px; max-width: 100%;">
+                <form action="{{ route('admin.pagos') }}" method="GET" class="d-flex flex-grow-1" style="max-width: 340px; min-width: 240px;">
                     <input type="hidden" name="estado" value="{{ $estadoFiltro }}">
                     <div class="input-group shadow-sm">
                         <input type="text" name="buscar" class="form-control border-0" placeholder="Buscar folio, matrícula o nombre..." value="{{ $buscar ?? '' }}">
